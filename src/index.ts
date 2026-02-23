@@ -1,7 +1,18 @@
+import { AppConfig } from "@config";
+// import { bootstraps } from "@modules";
+import { DocsPlugin, ErrorHandlerPlugin } from "@plugins";
 import { Elysia } from "elysia";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+// Bootstrap DI container
+// bootstrap();
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+const app = new Elysia()
+	.use(DocsPlugin)
+	.use(ErrorHandlerPlugin)
+	// .use(bootstraps)
+	.listen(AppConfig.APP_PORT);
+
+export default app.fetch;
+
+// eslint-disable-next-line no-console
+console.log("Api server started on port: ", AppConfig.APP_PORT);
