@@ -64,24 +64,28 @@ format:
 typecheck:
 	bun run typecheck
 
-# Database (PostgreSQL/Drizzle)
+# Database (PostgreSQL/Prisma)
 db-generate:
-	bun run db:generate
+	bunx --bun prisma generate
+
+db-migrate-dev:
+	bunx --bun prisma migrate dev
 
 db-migrate:
-	bun run db:migrate
+	bunx --bun prisma migrate deploy
 
 db-push:
-	bun run db:push
+	bunx --bun prisma db push --force-reset
 
 db-pull:
-	bun run db:pull
+	bunx --bun prisma db pull
 
 db-studio:
-	bun run db:studio
+	bunx --bun prisma studio
 
 db-drop:
-	bun run db:drop
+	bunx --bun prisma migrate reset --force
+	@echo "All tables dropped! Use 'make db-push' to recreate the schema."
 
 db-seed:
 	bun run db:seed

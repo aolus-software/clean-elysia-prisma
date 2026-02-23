@@ -116,7 +116,11 @@
 			"@repositories": ["./src/libs/repositories", "./src/libs/repositories/*"],
 			"@types": ["./src/libs/types", "./src/libs/types/*"],
 			"@utils": ["./src/libs/utils", "./src/libs/utils/*"],
-			"@modules": ["./src/modules", "./src/modules/*"]
+			"@modules": ["./src/modules", "./src/modules/*"],
+			"@prisma-generated": [
+				"./src/prisma/generated/prisma-client",
+				"./src/prisma/generated/prisma-client/*"
+			]
 		}
 	}
 }
