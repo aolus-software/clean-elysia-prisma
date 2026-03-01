@@ -1,15 +1,16 @@
 import { AppConfig } from "@config";
-// import { bootstraps } from "@modules";
+import { bootstraps } from "@modules";
 import { DocsPlugin, ErrorHandlerPlugin } from "@plugins";
 import { Elysia } from "elysia";
 
-// Bootstrap DI container
-// bootstrap();
+import { bootstrap } from "./bootstrap";
+
+bootstrap();
 
 const app = new Elysia()
 	.use(DocsPlugin)
 	.use(ErrorHandlerPlugin)
-	// .use(bootstraps)
+	.use(bootstraps)
 	.listen(AppConfig.APP_PORT);
 
 export default app.fetch;

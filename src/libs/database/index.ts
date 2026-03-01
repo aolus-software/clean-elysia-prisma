@@ -1,2 +1,2 @@
-export * from "./redis/index";
 export * from "./postgres/index";
+export * from "./redis/index";

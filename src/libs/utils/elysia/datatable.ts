@@ -1,6 +1,5 @@
 import { defaultSort, paginationLength } from "@default";
 import { DatatableType, SortDirection } from "@types";
-import { PgColumn } from "drizzle-orm/pg-core";
 
 // Define the query type that includes filter parameters
 type QueryWithFilters = DatatableType & {
@@ -46,22 +45,5 @@ export class DatatableToolkit {
 			sortDirection: orderDirection,
 			filter: Object.keys(filter).length > 0 ? filter : undefined,
 		};
-	}
-
-	static parseSort(
-		validateOrderBy: Record<string, PgColumn>,
-		orderBy: string,
-	): PgColumn {
-		type OrderableKey = keyof typeof validateOrderBy;
-
-		const normalizedOrderBy: OrderableKey = Object.keys(
-			validateOrderBy,
-		).includes(orderBy)
-			? orderBy
-			: "id";
-
-		const orderColumn = validateOrderBy[normalizedOrderBy];
-
-		return orderColumn;
 	}
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@database";
-import { Prisma } from "../generated/prisma-client/client";
+import { Prisma } from "@prisma-generated";
 
 export async function seedPermissions() {
 	const groupNames = ["user", "role", "permission"];

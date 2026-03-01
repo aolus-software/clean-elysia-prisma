@@ -4,8 +4,6 @@ import { EmailOptions } from "@types";
 import { log } from "@utils";
 import { Worker } from "bullmq";
 
-const queueRedis = RedisClient.getQueueRedisClient();
-
 const worker = new Worker<EmailOptions>(
 	"send-email",
 	async (job) => {
@@ -18,7 +16,7 @@ const worker = new Worker<EmailOptions>(
 		}
 	},
 	{
-		connection: queueRedis,
+		connection: RedisClient.getQueueConnectionOptions(),
 	},
 );
 

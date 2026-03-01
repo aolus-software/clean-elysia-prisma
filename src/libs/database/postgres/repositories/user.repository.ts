@@ -1,7 +1,6 @@
 import { prisma } from "@database";
 import { BadRequestError } from "@errors";
-import { UserStatus } from "@prisma-generated";
-import { Prisma } from "@prisma-generated";
+import { Prisma, UserStatus } from "@prisma-generated";
 import {
 	DatatableType,
 	PaginationResponse,
