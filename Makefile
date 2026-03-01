@@ -70,6 +70,7 @@ db-generate:
 
 db-migrate-dev:
 	bunx --bun prisma migrate dev
+	bunx --bun prisma generate
 
 db-migrate:
 	bunx --bun prisma migrate deploy

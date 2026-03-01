@@ -73,26 +73,26 @@ services:
       timeout: 10s
       retries: 3
 
-  app:
-    build: .
-    container_name: elysia-app
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/elysia_db
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: password123
-      REDIS_DB: 0
-      PORT: 3000
-    ports:
-      - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - app_network
+  # app:
+  #   build: .
+  #   container_name: elysia-app
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/elysia_db
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     REDIS_PASSWORD: password123
+  #     REDIS_DB: 0
+  #     PORT: 3000
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - app_network
 
 volumes:
   postgres_data:

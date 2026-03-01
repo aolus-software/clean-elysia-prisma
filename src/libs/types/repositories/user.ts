@@ -1,4 +1,4 @@
-import { UserStatusEnum } from "@database";
+import { UserStatus } from "@prisma-generated";
 import { t } from "elysia";
 
 export interface UserInformation {
@@ -6,7 +6,10 @@ export interface UserInformation {
 	name: string;
 	email: string;
 	roles: string[];
+	status: UserStatus;
 	permissions: string[];
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 export const UserInformationTypeBox = t.Object({
@@ -23,18 +26,17 @@ export type UserList = {
 	id: string;
 	name: string;
 	email: string;
-	status: UserStatusEnum;
+	status: UserStatus;
 	roles: string[];
-	remark: string | null;
-	created_at: Date;
-	updated_at: Date;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type UserCreate = {
 	name: string;
 	email: string;
 	password: string;
-	status?: UserStatusEnum;
+	status?: UserStatus;
 	remark?: string;
 	role_ids?: string[];
 };
@@ -43,14 +45,13 @@ export type UserDetail = {
 	id: string;
 	name: string;
 	email: string;
-	status: UserStatusEnum;
-	remark: string | null;
+	status: UserStatus;
 	roles: {
 		id: string;
 		name: string;
 	}[];
-	created_at: Date;
-	updated_at: Date;
+	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type UserForAuth = {
@@ -58,6 +59,6 @@ export type UserForAuth = {
 	name: string;
 	email: string;
 	password: string;
-	status: UserStatusEnum | null;
+	status: UserStatus | null;
 	email_verified_at: Date | null;
 };
