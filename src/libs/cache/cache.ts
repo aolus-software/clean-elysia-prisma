@@ -1,16 +1,10 @@
 import { RedisClient } from "@database";
 import { log } from "@utils";
-import Redis from "ioredis";
+import type { RedisClient as BunRedisClient } from "bun";
 
 class Cache {
-	private static redis: Redis | null = null;
-
-	private static getRedisClient(): Redis {
-		if (!this.redis) {
-			this.redis = RedisClient.getRedisClient();
-		}
-
-		return this.redis;
+	private static getRedisClient(): BunRedisClient {
+		return RedisClient.getRedisClient();
 	}
 
 	static async get<T>(key: string): Promise<T | null> {
@@ -49,7 +43,7 @@ class Cache {
 	static async flush(): Promise<void> {
 		try {
 			const client = this.getRedisClient();
-			await client.flushdb();
+			await client.send("FLUSHDB", []);
 		} catch (error) {
 			log.error(error, "Error flushing Redis cache:");
 		}
@@ -58,8 +52,7 @@ class Cache {
 	static async exists(key: string): Promise<boolean> {
 		try {
 			const client = this.getRedisClient();
-			const exists = await client.exists(key);
-			return exists === 1;
+			return await client.exists(key);
 		} catch (error) {
 			log.error(error, `Error checking existence of key ${key}:`);
 			return false;
@@ -96,12 +89,9 @@ class Cache {
 		}
 	}
 
-	static async disconnect(): Promise<void> {
+	static disconnect(): void {
 		try {
-			if (this.redis) {
-				await this.redis.quit();
-				this.redis = null;
-			}
+			RedisClient.disconnect();
 		} catch (error) {
 			log.error(error, "Error disconnecting from Redis:");
 		}
