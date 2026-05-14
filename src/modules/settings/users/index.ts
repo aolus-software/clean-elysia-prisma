@@ -69,7 +69,7 @@ export const UsersModule = new Elysia({
 				name: body.name,
 				email: body.email,
 				password: body.password,
-				status: body.status as never,
+				status: body.status,
 				role_ids: body.role_ids,
 			});
 			return ResponseToolkit.created(user, "User created successfully");
@@ -90,7 +90,7 @@ export const UsersModule = new Elysia({
 				name: body.name,
 				email: body.email,
 				password: body.password,
-				status: body.status as never,
+				status: body.status,
 			});
 			return ResponseToolkit.success(user, "User updated successfully");
 		},
