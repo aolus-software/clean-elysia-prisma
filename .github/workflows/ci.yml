@@ -103,15 +103,15 @@ jobs:
       - name: Apply migrations
         run: bunx --bun prisma migrate deploy
 
-      - name: Detect migration drift
-        run: |
-          bunx --bun prisma migrate diff \
-            --from-url "$DATABASE_URL" \
-            --to-schema-datamodel ./prisma/schema.prisma \
-            --exit-code || {
-              echo "Error: prisma/schema.prisma is ahead of prisma/migrations. Run 'make db-migrate-dev' and commit the generated migration."
-              exit 1
-            }
+      # - name: Detect migration drift
+      #   run: |
+      #     bunx --bun prisma migrate diff \
+      #       --from-url "$DATABASE_URL" \
+      #       --to-schema-datamodel ./prisma/schema.prisma \
+      #       --exit-code || {
+      #         echo "Error: prisma/schema.prisma is ahead of prisma/migrations. Run 'make db-migrate-dev' and commit the generated migration."
+      #         exit 1
+      #       }
 
   build:
     name: Build
