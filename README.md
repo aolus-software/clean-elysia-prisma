@@ -120,6 +120,27 @@ Start the production server:
 bun run start
 ```
 
+## Cluster Mode
+
+The app can run in cluster mode to scale across CPU cores. This is controlled by two environment variables:
+
+- `APP_CLUSTER_MODE` (default `false`) — set to `true` to enable cluster mode.
+- `APP_CLUSTER_WORKERS` (default `0`) — number of worker processes to fork. When `0`, falls back to `os.availableParallelism()` (typically the number of available CPU cores).
+
+When enabled, `src/index.ts` runs as the primary process: it forks workers, restarts any worker that exits, and forwards `SIGINT`/`SIGTERM` to all workers for graceful shutdown. Each worker loads `src/server.ts`, which is the actual Elysia app bootstrap.
+
+Example:
+
+```sh
+APP_CLUSTER_MODE=true APP_CLUSTER_WORKERS=4 bun run start
+```
+
+> **Caveats**
+>
+> - Every worker re-runs `bootstrap()` and instantiates its own Prisma, Redis, and BullMQ connections. Side-effectful imports (BullMQ workers, scheduled jobs) fire once per worker — if you need single-instance semantics, gate them on `cluster.worker?.id === 1` or run queue workers as a separate process.
+> - In-memory state (caches, rate-limit counters not backed by Redis) is **not** shared across workers — keep cross-worker state in Redis.
+> - The primary process does not bind the HTTP port; only workers call `.listen()`.
+
 ## Docker
 
 Build and run with Docker Compose:
@@ -133,7 +154,8 @@ docker-compose up -d
 ```
 src/
 ├── base.ts                # Base Elysia app with core plugins
-├── index.ts               # Entry point
+├── index.ts               # Cluster entrypoint (forks workers or imports server)
+├── server.ts              # Elysia app bootstrap (runs per worker)
 ├── bull/                  # Background jobs
 │   ├── queue/             # Job queues
 │   └── worker/            # Job workers

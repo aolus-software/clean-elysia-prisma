@@ -63,16 +63,32 @@ ClickHouse: `bun run db:clickhouse:migrate`, `bun run db:clickhouse:status`.
 
 ### Entry Points
 
-- `src/index.ts` — Boots the app: calls `bootstrap()`, then composes `DocsPlugin` + `ErrorHandlerPlugin` + `bootstraps` (all modules) and `.listen(AppConfig.APP_PORT)`.
+- `src/index.ts` — Cluster entrypoint. When `APP_CLUSTER_MODE=true`, the primary process forks workers (count = `APP_CLUSTER_WORKERS`, or `os.availableParallelism()` when `0`), restarts crashed workers, and forwards `SIGINT`/`SIGTERM`. Otherwise (or inside a worker) it dynamically imports `./server`.
+- `src/server.ts` — The actual Elysia bootstrap: calls `bootstrap()`, then composes `DocsPlugin` + `ErrorHandlerPlugin` + `bootstraps` (all modules) and `.listen(AppConfig.APP_PORT)`. Each cluster worker runs this independently.
 - `src/base.ts` — `baseApp`, the shared Elysia instance carrying global plugins: `RequestPlugin` → `LoggerPlugin` → `PerformancePlugin` → `DiPlugin` → `BodyLimitPlugin` → `SecurityPlugin`. Order matters — request-id must precede logging, etc.
 - `src/bootstrap.ts` — Registers services in the DI container at startup (currently registers `authService`). Add new DI registrations here.
 - `src/modules/index.ts` — `bootstraps` composes every top-level module (`HomeModule`, `HealthModule`, `AuthModule`, `SettingsModule`). New modules wire in here.
+
+### Cluster Mode
+
+Controlled by two env vars (see [`docs/CONFIGURATION.md`](./docs/CONFIGURATION.md)):
+
+- `APP_CLUSTER_MODE` — boolean, default `false`. When `true`, `src/index.ts` forks worker processes via Node's `cluster` module.
+- `APP_CLUSTER_WORKERS` — number, default `0`. When `0`, falls back to `os.availableParallelism()`.
+
+Caveats when enabling cluster mode:
+
+- Every worker re-runs `bootstrap()` and instantiates its own Prisma/Redis/BullMQ singletons. Side-effectful module loads (`@bull` workers, scheduled jobs) fire **once per worker** — gate them on `cluster.worker?.id === 1` or split queue workers into a separate process if you need single-instance semantics.
+- In-memory state (caches, rate-limit counters that aren't backed by Redis) does **not** share across workers. Cross-worker state must go through Redis or another shared store.
+- The primary process does not bind the HTTP port; only workers call `.listen()`. Health checks should target a worker.
 
 ### Layer Structure
 
 ```
 src/
-├── index.ts / base.ts / bootstrap.ts
+├── index.ts            # Cluster entrypoint (forks workers or imports server)
+├── server.ts           # Elysia app bootstrap (runs per worker)
+├── base.ts / bootstrap.ts
 ├── bull/               # BullMQ queues and workers (see rules/queue.md)
 ├── libs/               # Shared infrastructure — anything reusable lives here
 │   ├── config/         # Env-validated config (envalid)

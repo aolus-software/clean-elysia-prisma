@@ -8,6 +8,8 @@ interface IAppConfig {
 	APP_TIMEZONE: string;
 	APP_KEY: string;
 	APP_JWT_SECRET: string;
+	APP_CLUSTER_MODE: boolean;
+	APP_CLUSTER_WORKERS: number;
 
 	// log
 	LOG_LEVEL: "info" | "warn" | "debug";
@@ -24,6 +26,8 @@ export const AppConfig: IAppConfig = {
 	APP_TIMEZONE: env.APP_TIMEZONE,
 	APP_KEY: env.APP_KEY,
 	APP_JWT_SECRET: env.APP_JWT_SECRET,
+	APP_CLUSTER_MODE: env.APP_CLUSTER_MODE,
+	APP_CLUSTER_WORKERS: env.APP_CLUSTER_WORKERS,
 
 	LOG_LEVEL: env.LOG_LEVEL,
 

@@ -1,6 +1,6 @@
 // import "dotenv/config";
 
-import { cleanEnv, host, num, port, str, url } from "envalid";
+import { bool, cleanEnv, host, num, port, str, url } from "envalid";
 
 /**
  * Validates and parses all required environment variables at startup.
@@ -18,6 +18,8 @@ export const env = cleanEnv(process.env, {
 	APP_TIMEZONE: str({ default: "UTC" }),
 	APP_KEY: str({ default: "your-app-key" }),
 	APP_JWT_SECRET: str({ default: "jwt-secret" }),
+	APP_CLUSTER_MODE: bool({ default: false }),
+	APP_CLUSTER_WORKERS: num({ default: 0 }),
 	LOG_LEVEL: str({
 		choices: ["info", "warn", "debug"] as const,
 		default: "info",
