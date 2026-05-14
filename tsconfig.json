@@ -119,5 +119,6 @@
 			"@modules": ["./src/modules", "./src/modules/*"],
 			"@prisma-generated": ["./prisma/generated/client", "./prisma/generated/*"]
 		}
-	}
+	},
+	"exclude": ["node_modules", "dist", "server", ".agents", ".claude"]
 }

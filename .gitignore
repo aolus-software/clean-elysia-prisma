@@ -50,3 +50,6 @@ package-lock.json
 
 server
 dist
+
+skills-lock.json
+opencode.json
