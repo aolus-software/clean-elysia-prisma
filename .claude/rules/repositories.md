@@ -12,13 +12,15 @@ Repositories are the **only** layer allowed to call Prisma directly for cross-cu
 1. **Repositories are factory functions, not classes.**
    ```ts
    export function UserRepository(tx?: Prisma.TransactionClient) {
-     const db = tx ?? prisma;
-     return { /* methods */ };
+   	const db = tx ?? prisma;
+   	return {
+   		/* methods */
+   	};
    }
    ```
    The factory takes an optional `tx`. Inside, alias to `db` and use that everywhere — never branch between `tx` and `prisma` per method.
 2. **Transaction-aware everywhere.** Every repository accepts `Prisma.TransactionClient` so callers can compose them inside `prisma.$transaction(async (tx) => { ... })`. Never instantiate `prisma` in a method body other than the default.
-3. **No business rules in the repository.** Repositories own *how* to query, not *whether*. Authorization, side effects, and "should this happen?" logic belong in services.
+3. **No business rules in the repository.** Repositories own _how_ to query, not _whether_. Authorization, side effects, and "should this happen?" logic belong in services.
 4. **Always `select` explicitly.** Do not return raw Prisma `findMany()` rows — pick the fields you need. This guards against accidental password/email leaks and stabilizes the API.
 5. **Return types from `@types`.** Method signatures use domain types (`UserDetail`, `UserList`, `PaginationResponse<T>`). Do not leak `Prisma.User` to callers.
 6. **List queries enforce a sort/filter allowlist.** Use the pattern in `user.repository.ts`: declare `allowedSort`, `allowedFilter`, `sortDirectionAllowed`, validate inputs, throw `BadRequestError` on violations. Never pass raw user input into `orderBy` or `where` keys.

@@ -22,13 +22,13 @@ src/bull/
 5. **Workers must re-throw on failure.** BullMQ uses thrown errors to trigger retries. Pattern:
    ```ts
    async (job) => {
-     try {
-       await doWork(job.data);
-     } catch (error) {
-       log.error(error, `job ${job.id} failed`);
-       throw error;          // ← required for retry
-     }
-   }
+   	try {
+   		await doWork(job.data);
+   	} catch (error) {
+   		log.error(error, `job ${job.id} failed`);
+   		throw error; // ← required for retry
+   	}
+   };
    ```
 6. **Always attach a `worker.on("failed", ...)` log handler** so terminal failures (after retries are exhausted) land in logs with `log.error` from `@utils`.
 7. **No `console.log` in workers.** Use `log` from `@utils`.
@@ -36,7 +36,10 @@ src/bull/
 9. **Idempotent jobs.** Workers should tolerate the same job running twice (retry, restart). Use database guards (`upsert`, "already processed" checks) when at-least-once semantics aren't enough.
 10. **Configure retries explicitly when enqueuing** if the default isn't right:
     ```ts
-    await sendEmailQueue.add("send", payload, { attempts: 5, backoff: { type: "exponential", delay: 1000 } });
+    await sendEmailQueue.add("send", payload, {
+    	attempts: 5,
+    	backoff: { type: "exponential", delay: 1000 },
+    });
     ```
 11. **Do not enqueue inside a Prisma transaction.** If the transaction rolls back the job stays in Redis. Enqueue only after the transaction commits.
 12. **Job names are human-readable strings**, distinct from the queue name. Use them to discriminate handlers if a single queue serves multiple job types.

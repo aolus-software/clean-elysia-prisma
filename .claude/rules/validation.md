@@ -16,7 +16,9 @@ All HTTP I/O is validated via Elysia's TypeBox (`t`). Schemas live next to the r
    - Full response envelopes: `LoginResponseSchema`, `UserListResponseSchema`
 3. **Always use `commonResponse(data, { include: [...] })` for the `response` field on routes.** It wraps the data schema in the success envelope and adds error schemas for the listed status codes.
    ```ts
-   response: commonResponse(UserDetailDataSchema, { include: [200, 404, 422, 500] })
+   response: commonResponse(UserDetailDataSchema, {
+   	include: [200, 404, 422, 500],
+   });
    ```
    `include` should match the codes the handler can actually return. Don't blindly list every code.
 4. **Apply schemas in the route definition**, not by re-validating in the handler:

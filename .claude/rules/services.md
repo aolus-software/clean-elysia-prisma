@@ -1,6 +1,6 @@
 # Services — Business Logic
 
-Services hold the *what* and *why* of a feature. Repositories hold the *how* of data access. Handlers are the glue.
+Services hold the _what_ and _why_ of a feature. Repositories hold the _how_ of data access. Handlers are the glue.
 
 ## Location
 
@@ -20,7 +20,7 @@ Services hold the *what* and *why* of a feature. Repositories hold the *how* of 
 3. **Services orchestrate repositories.** Reach for Prisma directly only for:
    - Multi-aggregate transactions where a repository method would be a single-use wrapper
    - Trivial reads in one place that don't warrant a repository method
-   Otherwise call `UserRepository()`, `RoleRepository()`, etc.
+     Otherwise call `UserRepository()`, `RoleRepository()`, etc.
 4. **Validation is layered.**
    - Schema validation (shape, format) → TypeBox in `schema.ts`
    - Business validation (uniqueness, state machine) → service, throwing custom errors from `@errors`

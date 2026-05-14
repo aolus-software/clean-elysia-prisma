@@ -28,7 +28,7 @@ Throw, never return error objects. Imported from `@errors`:
 
 ```ts
 throw new BadRequestError("Validation error", [
-  { field: "email", message: "Invalid email format" },
+	{ field: "email", message: "Invalid email format" },
 ]);
 throw new UnauthorizedError("Unauthorized");
 throw new NotFoundError("User not found");

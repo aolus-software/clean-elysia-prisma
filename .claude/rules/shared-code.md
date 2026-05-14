@@ -6,19 +6,19 @@
 
 ## Where to put shared code
 
-| Concern                                | Directory                       | Alias              |
-| -------------------------------------- | ------------------------------- | ------------------ |
-| Env-validated config                   | `libs/config/`                  | `@config`          |
-| Prisma / Redis / ClickHouse clients    | `libs/database/`                | `@database`        |
-| Repositories (Prisma queries)          | `libs/database/postgres/repositories/` (re-exported via `libs/repositories/`) | `@repositories` |
-| Cache helpers + key constants          | `libs/cache/`                   | `@cache`           |
-| Custom error classes                   | `libs/errors/`                  | `@errors`          |
-| Auth/role/permission guards            | `libs/guards/`                  | `@guards`          |
-| Nodemailer transport + mail services   | `libs/mailer/`                  | `@mailer`          |
-| Elysia plugins (cross-cutting)         | `libs/plugins/`                 | `@plugins`         |
-| Domain TypeScript interfaces / DTOs    | `libs/types/`                   | `@types`           |
-| App-wide constants (pagination, etc.)  | `libs/default/`                 | `@default`         |
-| Generic utilities (`Hash`, `log`, …)   | `libs/utils/`                   | `@utils`           |
+| Concern                               | Directory                                                                     | Alias           |
+| ------------------------------------- | ----------------------------------------------------------------------------- | --------------- |
+| Env-validated config                  | `libs/config/`                                                                | `@config`       |
+| Prisma / Redis / ClickHouse clients   | `libs/database/`                                                              | `@database`     |
+| Repositories (Prisma queries)         | `libs/database/postgres/repositories/` (re-exported via `libs/repositories/`) | `@repositories` |
+| Cache helpers + key constants         | `libs/cache/`                                                                 | `@cache`        |
+| Custom error classes                  | `libs/errors/`                                                                | `@errors`       |
+| Auth/role/permission guards           | `libs/guards/`                                                                | `@guards`       |
+| Nodemailer transport + mail services  | `libs/mailer/`                                                                | `@mailer`       |
+| Elysia plugins (cross-cutting)        | `libs/plugins/`                                                               | `@plugins`      |
+| Domain TypeScript interfaces / DTOs   | `libs/types/`                                                                 | `@types`        |
+| App-wide constants (pagination, etc.) | `libs/default/`                                                               | `@default`      |
+| Generic utilities (`Hash`, `log`, …)  | `libs/utils/`                                                                 | `@utils`        |
 
 ## Rules
 
