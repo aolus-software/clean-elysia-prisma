@@ -1,3 +1,4 @@
+import { t, translateValidationMessage } from "@i18n";
 import { Elysia } from "elysia";
 
 import {
@@ -20,7 +21,7 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 400,
 				success: false,
-				message: error.message || "Bad Request",
+				message: error.message || t("errors.badRequest"),
 				errors: error.error || [],
 			};
 		}
@@ -30,7 +31,7 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 422,
 				success: false,
-				message: error.message || "Unprocessable Entity",
+				message: error.message || t("errors.unprocessableEntity"),
 				errors: error.error || [],
 			};
 		}
@@ -40,7 +41,7 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 404,
 				success: false,
-				message: error.message || "Not Found",
+				message: error.message || t("errors.notFound"),
 				data: null,
 			};
 		}
@@ -50,7 +51,7 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 401,
 				success: false,
-				message: error.message || "Unauthorized",
+				message: error.message || t("errors.unauthorized"),
 				data: null,
 			};
 		}
@@ -60,7 +61,7 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 403,
 				success: false,
-				message: error.message || "Forbidden",
+				message: error.message || t("errors.forbidden"),
 				data: null,
 			};
 		}
@@ -70,7 +71,7 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 429,
 				success: false,
-				message: error.message || "Too Many Requests",
+				message: error.message || t("errors.tooManyRequests"),
 				data: null,
 			};
 		}
@@ -78,7 +79,7 @@ export const ErrorHandlerPlugin = new Elysia({
 		if (code === "VALIDATION") {
 			set.status = 422;
 
-			/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+			/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
 			const validationError = error as any;
 			const errors: { field: string; message: string }[] = [];
 
@@ -86,7 +87,7 @@ export const ErrorHandlerPlugin = new Elysia({
 				for (const err of validationError.all) {
 					errors.push({
 						field: err.path?.replace(/^\//, "") || "unknown",
-						message: err.message || "Validation failed",
+						message: translateValidationMessage(err),
 					});
 				}
 			}
@@ -99,7 +100,7 @@ export const ErrorHandlerPlugin = new Elysia({
 				for (const err of valueErrors) {
 					errors.push({
 						field: err.path?.replace(/^\//, "") || "unknown",
-						message: err.message || "Validation failed",
+						message: translateValidationMessage(err),
 					});
 				}
 			}
@@ -107,18 +108,20 @@ export const ErrorHandlerPlugin = new Elysia({
 			if (!errors.length && validationError.message) {
 				errors.push({
 					field: "general",
-					message: validationError.message,
+					message: translateValidationMessage({
+						message: validationError.message,
+					}),
 				});
 			}
-			/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+			/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
 
 			return {
 				status: 422,
 				success: false,
-				message: "Request validation failed",
+				message: t("validation.failed"),
 				errors: errors.length
 					? errors
-					: [{ field: "general", message: "Invalid request data" }],
+					: [{ field: "general", message: t("validation.invalid") }],
 			};
 		}
 
@@ -127,7 +130,7 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 404,
 				success: false,
-				message: "Route not found",
+				message: t("errors.routeNotFound"),
 				data: null,
 			};
 		}
@@ -137,8 +140,8 @@ export const ErrorHandlerPlugin = new Elysia({
 			return {
 				status: 400,
 				success: false,
-				message: "Invalid request format",
-				errors: [{ field: "body", message: "Failed to parse request body" }],
+				message: t("errors.parseFailed"),
+				errors: [{ field: "body", message: t("errors.parseBody") }],
 			};
 		}
 
@@ -148,7 +151,7 @@ export const ErrorHandlerPlugin = new Elysia({
 		return {
 			status: 500,
 			success: false,
-			message: "Internal Server Error",
+			message: t("errors.internal"),
 			data: null,
 		};
 	})

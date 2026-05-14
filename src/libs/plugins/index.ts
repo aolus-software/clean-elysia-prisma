@@ -4,6 +4,7 @@ export * from "./core/index";
 export * from "./di.plugin";
 export * from "./docs.plugin";
 export * from "./error-handler.plugin";
+export * from "./locale.plugin";
 export * from "./logger.plugin";
 export * from "./performance.plugin";
 export * from "./request-id.plugin";

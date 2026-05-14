@@ -111,6 +111,7 @@
 			"@default": ["./src/libs/default", "./src/libs/default/*"],
 			"@errors": ["./src/libs/errors", "./src/libs/errors/*"],
 			"@guards": ["./src/libs/guards", "./src/libs/guards/*"],
+			"@i18n": ["./src/libs/i18n", "./src/libs/i18n/*"],
 			"@mailer": ["./src/libs/mailer", "./src/libs/mailer/*"],
 			"@plugins": ["./src/libs/plugins", "./src/libs/plugins/*"],
 			"@repositories": ["./src/libs/repositories", "./src/libs/repositories/*"],
