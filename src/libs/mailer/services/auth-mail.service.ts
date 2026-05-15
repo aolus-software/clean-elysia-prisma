@@ -2,6 +2,7 @@ import { sendEmailQueue } from "@bull";
 import { AppConfig } from "@config";
 import { prisma } from "@database";
 import { NotFoundError } from "@errors";
+import { getCurrentLocale, t } from "@i18n";
 import { UserRepository } from "@repositories";
 import { log, StrToolkit } from "@utils";
 
@@ -16,6 +17,7 @@ export const AuthMailService = {
 
 		const token = StrToolkit.random(100);
 		const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
+		const lang = getCurrentLocale();
 
 		await prisma.userEmailVerification.deleteMany({ where: { userId } });
 		await prisma.userEmailVerification.create({
@@ -23,16 +25,17 @@ export const AuthMailService = {
 		});
 
 		await sendEmailQueue.add("send-email", {
-			subject: "Verify Your Email",
+			subject: t("mail.subject.verification"),
 			to: user.email,
 			template: "auth/email-verification",
+			lang,
 			variables: {
 				user_name: user.name,
 				verification_url: `${AppConfig.CLIENT_URL}/auth/verify-email?token=${token}`,
 			},
 		});
 
-		log.info({ userId, email: user.email }, "Verification email queued");
+		log.info({ userId, email: user.email, lang }, "Verification email queued");
 	},
 
 	async sendResetPasswordEmail(userId: string) {
@@ -43,6 +46,7 @@ export const AuthMailService = {
 
 		const token = StrToolkit.random(100);
 		const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
+		const lang = getCurrentLocale();
 
 		await prisma.passwordReset.deleteMany({ where: { userId } });
 		await prisma.passwordReset.create({
@@ -50,15 +54,19 @@ export const AuthMailService = {
 		});
 
 		await sendEmailQueue.add("send-email", {
-			subject: "Reset Your Password",
+			subject: t("mail.subject.resetPassword"),
 			to: user.email,
 			template: "auth/forgot-password",
+			lang,
 			variables: {
 				user_name: user.name,
 				reset_password_url: `${AppConfig.CLIENT_URL}/auth/reset-password?token=${token}`,
 			},
 		});
 
-		log.info({ userId, email: user.email }, "Password reset email queued");
+		log.info(
+			{ userId, email: user.email, lang },
+			"Password reset email queued",
+		);
 	},
 };

@@ -1,10 +1,21 @@
 import { AppConfig, MailConfig } from "@config";
+import { DEFAULT_LOCALE, Locale } from "@i18n";
 import { EmailOptions } from "@types";
 import { log } from "@utils";
 import fs from "fs";
 import path from "path";
 
 import { transporter } from "../transport";
+
+const TEMPLATES_DIR = path.join(process.cwd(), "src/libs/mailer/templates");
+
+const resolveTemplatePath = (template: string, lang?: Locale): string => {
+	if (lang && lang !== DEFAULT_LOCALE) {
+		const localized = path.join(TEMPLATES_DIR, `${template}.${lang}.html`);
+		if (fs.existsSync(localized)) return localized;
+	}
+	return path.join(TEMPLATES_DIR, `${template}.html`);
+};
 
 export const EmailService = {
 	async sendEmail(options: EmailOptions) {
@@ -13,10 +24,9 @@ export const EmailService = {
 		// if the option is using template, we need to find the template and replace the key
 		if (options.template) {
 			try {
-				const templatePath = path.join(
-					process.cwd(),
-					"src/libs/mailer/templates",
-					`${options.template}.html`,
+				const templatePath = resolveTemplatePath(
+					options.template,
+					options.lang,
 				);
 				htmlContent = fs.readFileSync(templatePath, "utf-8");
 
