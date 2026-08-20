@@ -1,4 +1,5 @@
 import { baseApp } from "@base";
+import { PermissionGuard, RoleGuard } from "@guards";
 import { AuthPlugin } from "@plugins";
 import { DatatableToolkit, ResponseToolkit } from "@utils";
 import { Elysia, t } from "elysia";
@@ -36,6 +37,9 @@ export const RolesModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["role list"]);
+			},
 			query: RoleQuerySchema,
 			response: RoleListResponseSchema,
 			detail: {
@@ -51,6 +55,9 @@ export const RolesModule = new Elysia({
 			return ResponseToolkit.success(role, "Role retrieved successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["role detail"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: RoleDetailResponseSchema,
 			detail: {
@@ -68,6 +75,9 @@ export const RolesModule = new Elysia({
 			return ResponseToolkit.created(role, "Role created successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["role create"]);
+			},
 			body: CreateRoleSchema,
 			response: RoleCreateResponseSchema,
 			detail: {
@@ -83,6 +93,9 @@ export const RolesModule = new Elysia({
 			return ResponseToolkit.success(role, "Role updated successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["role edit"]);
+			},
 			params: t.Object({ id: t.String() }),
 			body: UpdateRoleSchema,
 			response: RoleUpdateResponseSchema,
@@ -99,6 +112,9 @@ export const RolesModule = new Elysia({
 			return ResponseToolkit.success(null, "Role deleted successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["role delete"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: RoleDeleteResponseSchema,
 			detail: {
@@ -117,6 +133,9 @@ export const RolesModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				RoleGuard.canActivate(user, ["superuser"]);
+			},
 			params: t.Object({ id: t.String() }),
 			body: SyncRolePermissionsSchema,
 			response: RoleSyncPermissionsResponseSchema,

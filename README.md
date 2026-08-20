@@ -6,7 +6,7 @@ A clean architecture backend API built with Elysia.js, TypeScript, and Bun.
 
 - Clean architecture pattern with separation of concerns
 - Elysia.js web framework with TypeBox validation
-- PostgreSQL with Drizzle ORM
+- PostgreSQL with Prisma ORM
 - Redis for caching and rate limiting
 - BullMQ for background job processing
 - ClickHouse for analytics (optional)
@@ -20,7 +20,7 @@ A clean architecture backend API built with Elysia.js, TypeScript, and Bun.
 - **Framework**: Elysia.js
 - **Language**: TypeScript
 - **Databases**: PostgreSQL, Redis, ClickHouse
-- **ORM**: Drizzle
+- **ORM**: Prisma 7 (`@prisma/adapter-pg`)
 - **Queue**: BullMQ
 - **Validation**: TypeBox
 - **API Docs**: OpenAPI + Scalar
@@ -78,10 +78,10 @@ For development, you can also use:
 bun run db:push  # Push schema directly without migrations
 ```
 
-Open Drizzle Studio to view and edit data:
+Open Prisma Studio to view and edit data:
 
 ```sh
-bun run db:studio
+make db-studio
 ```
 
 Run ClickHouse migrations:
@@ -241,15 +241,19 @@ For more details, see the [API Documentation Guide](./docs/API_DOCUMENTATION.md)
 - `bun run format` - Format code with Prettier
 - `bun run typecheck` - Run TypeScript type checking
 
-### Database (PostgreSQL/Drizzle)
+### Database (PostgreSQL/Prisma)
 
-- `bun run db:generate` - Generate migration files from schema
-- `bun run db:migrate` - Apply pending migrations
-- `bun run db:push` - Push schema to database (development only)
-- `bun run db:pull` - Pull schema from database
-- `bun run db:studio` - Open Drizzle Studio
-- `bun run db:drop` - Drop all tables (dangerous!)
-- `bun run db:seed` - Seed database with initial data
+Database commands are Make targets wrapping `bunx --bun prisma` — there are no `db:*` bun scripts
+apart from the seeder.
+
+- `make db-generate` - Generate the Prisma client
+- `make db-migrate-dev` - Create and apply a migration, then generate (development)
+- `make db-migrate` - Apply migrations (`prisma migrate deploy`, production)
+- `make db-push` - Push the schema to the database (development only; **force-resets data**)
+- `make db-pull` - Pull the schema from the database
+- `make db-studio` - Open Prisma Studio
+- `make db-drop` - Reset the database (**dangerous — destroys all data**)
+- `bun run db:seed` - Seed the database with initial data
 
 ### Database (ClickHouse)
 

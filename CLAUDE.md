@@ -26,8 +26,6 @@ Rule files override the summaries in this document when more specific.
 - **Logging**: pino via `@bogeychan/elysia-logger`
 - **Docs**: `@elysiajs/openapi` served by Scalar at `/docs` (disabled in production)
 
-> README.md is partially stale — it mentions Drizzle in places. This codebase uses **Prisma**.
-
 ## Commands
 
 ```sh
@@ -35,12 +33,11 @@ bun run dev          # Dev server with hot reload
 bun run lint         # ESLint
 bun run lint:fix     # Fix ESLint issues
 bun run format       # Prettier
+bun run typecheck    # tsc --noEmit
 bun run db:seed      # Seed database
 bun run build        # Bun bundle → dist/index.js
 bun run start        # Run dist/index.js
 ```
-
-> **Known typo**: `package.json` defines `"typechedk"` (sic) instead of `"typecheck"`. Run type checks via `bunx tsc --noEmit` until the script is renamed.
 
 > **No test runner is configured.** `bun run test` just exits with an error. Don't claim test results without setting one up.
 

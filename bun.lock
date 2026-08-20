@@ -43,6 +43,9 @@
         "prisma": "7.8.0",
         "typescript-eslint": "^8.59.3",
       },
+      "peerDependencies": {
+        "typescript": "^6.0.3",
+      },
     },
   },
   "packages": {

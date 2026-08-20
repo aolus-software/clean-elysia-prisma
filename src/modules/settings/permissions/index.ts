@@ -1,4 +1,5 @@
 import { baseApp } from "@base";
+import { PermissionGuard } from "@guards";
 import { AuthPlugin } from "@plugins";
 import { DatatableToolkit, ResponseToolkit } from "@utils";
 import { Elysia, t } from "elysia";
@@ -34,6 +35,9 @@ export const PermissionsModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["permission list"]);
+			},
 			query: PermissionQuerySchema,
 			response: PermissionListResponseSchema,
 			detail: {
@@ -52,6 +56,9 @@ export const PermissionsModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["permission detail"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: PermissionDetailResponseSchema,
 			detail: {
@@ -71,6 +78,9 @@ export const PermissionsModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["permission create"]);
+			},
 			body: CreatePermissionSchema,
 			response: PermissionCreateResponseSchema,
 			detail: {
@@ -93,6 +103,9 @@ export const PermissionsModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["permission edit"]);
+			},
 			params: t.Object({ id: t.String() }),
 			body: UpdatePermissionSchema,
 			response: PermissionUpdateResponseSchema,
@@ -109,6 +122,9 @@ export const PermissionsModule = new Elysia({
 			return ResponseToolkit.success(null, "Permission deleted successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["permission delete"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: PermissionDeleteResponseSchema,
 			detail: {

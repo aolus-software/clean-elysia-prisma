@@ -1,4 +1,5 @@
 import { baseApp } from "@base";
+import { PermissionGuard, RoleGuard } from "@guards";
 import { AuthPlugin } from "@plugins";
 import { DatatableToolkit, ResponseToolkit } from "@utils";
 import { Elysia, t } from "elysia";
@@ -38,6 +39,9 @@ export const UsersModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["user list"]);
+			},
 			query: UserQuerySchema,
 			response: UserListResponseSchema,
 			detail: {
@@ -53,6 +57,9 @@ export const UsersModule = new Elysia({
 			return ResponseToolkit.success(user, "User retrieved successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["user detail"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: UserDetailResponseSchema,
 			detail: {
@@ -75,6 +82,9 @@ export const UsersModule = new Elysia({
 			return ResponseToolkit.created(user, "User created successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["user create"]);
+			},
 			body: CreateUserSchema,
 			response: UserCreateResponseSchema,
 			detail: {
@@ -95,6 +105,9 @@ export const UsersModule = new Elysia({
 			return ResponseToolkit.success(user, "User updated successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["user edit"]);
+			},
 			params: t.Object({ id: t.String() }),
 			body: UpdateUserSchema,
 			response: UserUpdateResponseSchema,
@@ -111,6 +124,9 @@ export const UsersModule = new Elysia({
 			return ResponseToolkit.success(null, "User deleted successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["user delete"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: UserDeleteResponseSchema,
 			detail: {
@@ -126,6 +142,9 @@ export const UsersModule = new Elysia({
 			return ResponseToolkit.success(null, "User roles synced successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				RoleGuard.canActivate(user, ["superuser"]);
+			},
 			params: t.Object({ id: t.String() }),
 			body: SyncUserRolesSchema,
 			response: UserSyncRolesResponseSchema,
@@ -146,6 +165,9 @@ export const UsersModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["user create"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: UserActionResponseSchema,
 			detail: {
@@ -164,6 +186,9 @@ export const UsersModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["user create"]);
+			},
 			params: t.Object({ id: t.String() }),
 			response: UserActionResponseSchema,
 			detail: {
@@ -179,6 +204,9 @@ export const UsersModule = new Elysia({
 			return ResponseToolkit.success(null, "Password reset successfully");
 		},
 		{
+			beforeHandle: ({ user }) => {
+				RoleGuard.canActivate(user, ["superuser"]);
+			},
 			params: t.Object({ id: t.String() }),
 			body: ResetPasswordSchema,
 			response: UserActionResponseSchema,

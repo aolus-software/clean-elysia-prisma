@@ -2,6 +2,16 @@
 
 Coding rules for the `clean-elysia-prisma` codebase. Each file is a focused, enforceable contract — read the relevant rule before writing code in that area.
 
+## Always in scope
+
+These three apply to **every** change, regardless of which files it touches. Read them first.
+
+| Rule                                           | Scope                                                                                                             |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [contradiction-halt.md](./contradiction-halt.md) | A request that contradicts a rule, the architecture, or a security invariant is reported and halted — never silently implemented or worked around. Lists the known issues already on record |
+| [documentation.md](./documentation.md)         | A doc your change makes wrong is fixed in the **same** change; lists every doc that must stay in sync              |
+| [audit-findings.md](./audit-findings.md)       | How an audit finding is written: five blocks, plain language, severity by consequence, CONFIRMED vs SUSPECT — the writing contract for [`/audit-flow`](../commands/audit-flow.md) |
+
 ## Requested rules
 
 | Rule                                 | Scope                                                     |

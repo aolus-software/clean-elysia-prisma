@@ -1,0 +1,70 @@
+name: Documentation issue
+description: Something in the docs is wrong, missing, or misleading.
+title: "docs: "
+labels: ["documentation", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A doc that contradicts the code is a bug here — `CLAUDE.md` and `.claude/rules/`
+        are what both humans and coding agents read before writing anything, so a stale
+        line propagates. Thank you for reporting it.
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Which document?
+      multiple: true
+      options:
+        - README.md
+        - CLAUDE.md
+        - .claude/rules/ (coding standards)
+        - .agents/ (agent skills bundle)
+        - .github/copilot-instructions.md
+        - docs/API_DOCUMENTATION.md
+        - docs/CONFIGURATION.md
+        - docs/ERROR_HANDLING.md
+        - docs/PLUGINS.md
+        - docs/SECURITY.md
+        - OpenAPI / Scalar reference at /docs
+        - Code comments
+        - .env.example
+        - Makefile help output
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Specific location
+      description: File and line, or the heading / command name.
+      placeholder: 'CLAUDE.md, "Path Aliases" table — or .claude/rules/repositories.md:26'
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: Quote what it says now and explain what the code actually does.
+      placeholder: |
+        CLAUDE.md says the generated Prisma client lives in `prisma/generated/prisma-client/`,
+        but `prisma/schema.prisma` sets `output = "./generated"`, so it is written to
+        `prisma/generated/` and `@prisma-generated` resolves there.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested correction
+      description: Optional, but a concrete rewrite is the fastest path to a fix.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the code (or ran the command) and confirmed the doc is the thing that is wrong.
+          required: true

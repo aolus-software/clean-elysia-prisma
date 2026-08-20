@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or usage help
+    url: https://github.com/aolus-software/clean-elysia-prisma/discussions
+    about: Ask how to do something with the starter — setup, Elysia/Prisma patterns, cluster mode, deployment. Questions filed as issues will be converted to discussions.
+  - name: Report a security vulnerability
+    url: https://github.com/aolus-software/clean-elysia-prisma/security/advisories/new
+    about: Report privately through GitHub Security Advisories. Never open a public issue for a vulnerability.
+  - name: API security documentation
+    url: https://github.com/aolus-software/clean-elysia-prisma/blob/main/docs/SECURITY.md
+    about: How auth, RBAC, password rules, tokens, rate limiting, and security headers work in this template. Read this before asking whether something is a vulnerability.

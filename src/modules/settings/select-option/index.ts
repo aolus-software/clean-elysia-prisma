@@ -1,4 +1,5 @@
 import { baseApp } from "@base";
+import { PermissionGuard } from "@guards";
 import { AuthPlugin } from "@plugins";
 import { PermissionRepository, RoleRepository } from "@repositories";
 import { ResponseToolkit } from "@utils";
@@ -26,6 +27,9 @@ export const SelectOptionModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["permission list"]);
+			},
 			response: PermissionSelectOptionResponseSchema,
 			detail: {
 				summary: "Permission select options",
@@ -53,6 +57,9 @@ export const SelectOptionModule = new Elysia({
 			);
 		},
 		{
+			beforeHandle: ({ user }) => {
+				PermissionGuard.canActivate(user, ["role list"]);
+			},
 			response: RoleSelectOptionResponseSchema,
 			detail: {
 				summary: "Role select options",

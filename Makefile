@@ -1,4 +1,4 @@
-.PHONY: help install dev build start lint lint-fix format typecheck db-generate db-migrate db-push db-pull db-studio db-drop db-seed db-clickhouse-migrate db-clickhouse-status fresh reset
+.PHONY: help install dev build start lint lint-fix format typecheck db-generate db-migrate db-migrate-dev db-push db-pull db-studio db-drop db-seed db-clickhouse-migrate db-clickhouse-status fresh reset
 
 # Default target
 help:
@@ -22,13 +22,14 @@ help:
 	@echo "    format              - Format code with Prettier"
 	@echo "    typecheck           - Run TypeScript type checking"
 	@echo ""
-	@echo "  Database (PostgreSQL/Drizzle):"
-	@echo "    db-generate         - Generate migration files"
-	@echo "    db-migrate          - Run pending migrations"
-	@echo "    db-push             - Push schema to database (dev only)"
+	@echo "  Database (PostgreSQL/Prisma):"
+	@echo "    db-generate         - Generate the Prisma client"
+	@echo "    db-migrate          - Apply migrations (prod: migrate deploy)"
+	@echo "    db-migrate-dev      - Create + apply a migration, then generate (dev)"
+	@echo "    db-push             - Push schema to database (dev only, FORCE-RESETS data)"
 	@echo "    db-pull             - Pull schema from database"
-	@echo "    db-studio           - Open Drizzle Studio"
-	@echo "    db-drop             - Drop all tables (dangerous!)"
+	@echo "    db-studio           - Open Prisma Studio"
+	@echo "    db-drop             - Reset the database (dangerous! destroys all data)"
 	@echo "    db-seed             - Seed database with initial data"
 	@echo ""
 	@echo "  Database (ClickHouse):"

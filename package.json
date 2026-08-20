@@ -10,13 +10,15 @@
 		"start:binary": "./server",
 		"lint": "eslint . --ext .ts",
 		"lint:fix": "eslint . --ext .ts --fix",
-		"format": "prettier --write . --ext .ts",
-		"format:check": "prettier --check . --ext .ts",
-		"typechedk": "tsc --noEmit",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"typecheck": "bun run tsc --noEmit",
 		"db:seed": "bun ./prisma/seed/index.ts",
 		"i18n:keys": "bun ./src/libs/i18n/scripts/generate-keys.ts",
 		"husky": "husky install",
-		"prepare": "husky"
+		"prepare": "husky",
+		"db:clickhouse:migrate": "bun run ./src/libs/database/clickhouse/scripts/migrate.ts migrate",
+		"db:clickhouse:status": "bun run ./src/libs/database/clickhouse/scripts/migrate.ts status"
 	},
 	"dependencies": {
 		"@bogeychan/elysia-logger": "^0.1.10",
@@ -56,6 +58,9 @@
 		"husky": "^9.1.7",
 		"prisma": "7.8.0",
 		"typescript-eslint": "^8.59.3"
+	},
+	"peerDependencies": {
+		"typescript": "^6.0.3"
 	},
 	"module": "src/index.js"
 }
