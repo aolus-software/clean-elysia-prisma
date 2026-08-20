@@ -71,4 +71,4 @@ across without checking which side you are on:
 | CRUD checks | in the **service** (fetch, check, throw) | in the **repository** |
 | Response schemas | named envelopes built in `schema.ts` | `commonResponse(...)` inline at the route |
 | OpenAPI tags | `Settings - Users` | `Settings/Users` |
-| Soft delete | none — every delete is a hard `DELETE` | `deleted_at` on soft-deletable tables |
+| Soft delete | `deletedAt` on `User` only | `deleted_at` on soft-deletable tables |

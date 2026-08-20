@@ -43,7 +43,7 @@ route handler (index.ts) -> service.ts -> repository -> Prisma -> PostgreSQL
 9. **`AuthPlugin` is not in `baseApp`.** Authentication is opt-in: a module chains `.use(baseApp).use(AuthPlugin)` and puts public routes above the `AuthPlugin` call. A route behind `AuthPlugin` with no `beforeHandle` guard is authenticated but unauthorized — any logged-in user can call it.
 10. **`ErrorHandlerPlugin` and `DocsPlugin` are registered in `src/server.ts`**, outside `baseApp`, wrapping `bootstraps` from `@modules`. Thrown `@errors` classes become HTTP responses there — see [errors-and-responses.md](./errors-and-responses.md). Note the 429 from the rate limiter does **not** pass through it ([rate-limiting.md](./rate-limiting.md)).
 11. **Module directory names are plural for collections** — `settings/users/`, `settings/roles/`, `settings/permissions/` — and OpenAPI tags use the spaced-dash form, `"Settings - Users"`. Both differ from the sibling `clean-elysia`; match this repo, not that one. See [openapi.md](./openapi.md).
-12. **Every user-facing string is a catalog key**, not an English literal — [i18n.md](./i18n.md). The existing modules do not comply yet; that is a recorded gap, not a licence.
+12. **Every user-facing string is a catalog key**, not an English literal — [i18n.md](./i18n.md). All seven modules comply as of 2026-08-20; keep it that way.
 
 ## Sibling rules
 

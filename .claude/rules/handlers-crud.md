@@ -154,9 +154,9 @@ Create returns the created entity, not `null` — `RoleService.create` resolves 
 
 Delete returns 200 with a message and `null` data, not 204 — the envelope always has a body.
 
-Note this is a **hard delete**: `prisma/schema.prisma` has no `deletedAt` on any model, so
-`RoleService.delete` issues a real `DELETE`. Do not document it as a soft delete, and be aware it can
-fail or cascade on FK-referencing rows. See [schema.md](./schema.md).
+Note `RoleService.delete` is a **hard delete** — only `User` is soft-deleted in this repo, so a role
+delete issues a real `DELETE` and can fail or cascade on FK-referencing rows. The user module's
+delete stamps `deletedAt` instead. Check which you are writing. See [schema.md](./schema.md).
 
 ## One response schema per route
 

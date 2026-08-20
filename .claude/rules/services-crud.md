@@ -113,13 +113,24 @@ async delete(id: string): Promise<void> {
 },
 ```
 
-**This is a hard delete.** `prisma/schema.prisma` defines no `deletedAt` on any model, so there is no
-soft-delete path here and no `deleted_at` filter on reads. Two consequences to keep in mind:
+**Whether this is a hard delete depends on the model.** `User` is soft-deleted — `UserService.delete`
+stamps `deletedAt` with an `update`, and every read in `UserRepository` filters `deletedAt: null`:
+
+```ts
+await prisma.user.update({
+	where: { id },
+	data: { deletedAt: new Date() },
+});
+```
+
+Every **other** model is still hard-deleted, and two consequences follow there:
 
 - Deleting a row that other tables reference will cascade or fail on the foreign key, depending on the
   relation. Check the relation before adding a delete to a new model.
-- The audit trail is gone. Both sibling repos soft-delete users; this one does not. If that ever
-  changes it is a schema migration, not a service change — see [schema.md](./schema.md).
+- The audit trail is gone.
+
+Extending soft delete to another model is a schema migration plus an audit of every read of it — see
+[schema.md](./schema.md).
 
 ## Beyond CRUD
 

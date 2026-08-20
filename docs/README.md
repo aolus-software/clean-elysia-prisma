@@ -93,6 +93,22 @@ Complete plugin architecture guide:
 - Understanding the plugin architecture
 - Extending application functionality
 
+### [Deployment Documentation](./DEPLOYMENT.md)
+
+How to run this app in production:
+
+- Scaling flags (`APP_CLUSTER_MODE`, `APP_CLUSTER_WORKERS`)
+- Node cluster mode
+- PM2 via `ecosystem.config.cjs`
+- Docker and Docker Compose, plus the `make docker-*` targets
+- Git-pull deploys and running migrations safely
+
+**Use this if you're:**
+
+- Deploying to a VM or container host
+- Choosing a scaling strategy
+- Setting up CI/CD or running migrations in production
+
 ## 🚀 Quick Start
 
 ### 1. View Interactive Documentation

@@ -66,21 +66,34 @@ them, and do not "fix" one as a side effect of unrelated work — raise it first
   flattens those same `Permission.name` strings into `UserInformation.permissions`, so a guard call
   would have to be written `PermissionGuard.canActivate(user, ["user create"])`. Do not introduce
   colon-form strings without deciding (and migrating) the whole catalog.
-- **There is no soft delete anywhere in this repo.** `prisma/schema.prisma` declares no `deletedAt`
-  (or `deleted_at`) field on any model, and no `deletedAt` appears in `src/`. Deletes are hard:
-  `src/modules/settings/users/service.ts:128` calls `prisma.user.delete(...)`, and the role and
-  permission repositories do the same (`role.repository.ts:238`, `permission.repository.ts:247`).
-  This diverges from the sibling templates in this family, which all soft-delete `User`. Nothing here
-  filters `deletedAt: null`, and it would be a bug to write code that assumes it does.
-- **`UserStatus` is missing a `SUSPENDED` value.** The enum in `prisma/schema.prisma:16` has three
-  members — `ACTIVE`, `INACTIVE`, `BLOCKED` — where the sibling templates carry four. Any state
-  machine or UI copied from a sibling will reference a value this schema does not have.
+- **~~There is no soft delete anywhere.~~ ✅ RESOLVED 2026-08-20.** `User` now carries `deletedAt`
+  and `UserService.delete` stamps it instead of issuing a `DELETE`; all four read paths in
+  `user.repository.ts` filter `deletedAt: null`. Kept on record because the *shape* matters: soft
+  delete is only as good as its least-filtered read, and the one that matters most is
+  `userInformation()`, which `AuthPlugin` resolves the caller's roles and permissions through — an
+  unfiltered read there would leave a deleted user fully authenticated. `Role`, `Permission`, and the
+  join tables are **still hard-deleted**; do not assume otherwise. Note `User.email` deliberately lost
+  its `@unique` so a deleted user's address is reusable — uniqueness among live users is a service
+  check only.
+
+- **~~`UserStatus` is missing a `SUSPENDED` value.~~ ✅ RESOLVED 2026-08-20.** The enum now carries
+  four members, matching the sibling templates.
+
 - **There are no tests and no test runner.** `package.json` defines
   `"test": "echo \"Error: no test specified\" && exit 1"`, and the repo contains zero `*.test.ts` /
   `*.spec.ts` files. None of the invariants in these rules has a regression test. Never report test
   results without first setting a runner up and saying that you did.
-- **There is no deployment configuration.** No `ecosystem.config.*` (PM2) exists, and the `Makefile`
-  has no Docker or PM2 targets — its full target list is `help`, `install`, `dev`, `build`, `start`,
-  `lint`, `lint-fix`, `format`, `typecheck`, the `db-*` targets, `fresh`, and `reset`. A `Dockerfile`
-  and `docker-compose.yml` do exist at the repo root but are not wired into any canonical command,
-  so "the deploy command" does not exist to be updated.
+- **~~There is no deployment configuration.~~ ✅ RESOLVED 2026-08-20.** The `Makefile` now carries the
+  nine `docker-*` targets and an `ecosystem.config.cjs` exists; `docs/DEPLOYMENT.md` documents both
+  paths. Two things to know before using them:
+  - **PM2 runs `instances: 1`, not `"max"`.** The sibling `clean-elysia` scales by SO_REUSEPORT, but
+    this repo has no `APP_REUSE_PORT` — `src/server.ts` calls `.listen(AppConfig.APP_PORT)` plainly,
+    so a second instance would fail to bind. The ecosystem file documents the three-file change needed
+    to enable it. `APP_CLUSTER_MODE=false` is set in both env blocks so the in-process clustering in
+    `src/index.ts` does not fight PM2 for the socket.
+  - **The Docker image could not previously have run.** Fixed alongside: the `app` service in
+    `docker-compose.yml` was entirely commented out, and the `Dockerfile` ran `bun install
+    --production` (which drops `prisma`, a devDependency, so neither the CLI nor a generated client
+    existed in the image) with no `prisma generate` step. A `.dockerignore` was added too, since
+    `COPY . .` was copying host `node_modules` and `prisma/generated` — macOS/arm Prisma engines —
+    into an Alpine image.

@@ -237,6 +237,52 @@ When adding new configuration:
 2. Fill in all required values
 3. Restart the application
 
+## Porting configuration between the sibling templates
+
+This template has three siblings — `clean-elysia`, `clean-elysia-prisma`, `clean-nest-drizzle-pg`,
+and `clean-nest-prisma-pg` — and the two families use **different names for the same concepts**. The
+names are internally consistent within each family and are deliberately left alone; this table is
+here so an `.env` can be carried across without silently losing a setting.
+
+**14 variables are common to all four**: `APP_NAME`, `APP_PORT`, `APP_TIMEZONE`, `APP_URL`,
+`DATABASE_URL`, `JWT_SECRET`, `MAIL_FROM`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURE`, `NODE_ENV`,
+`REDIS_HOST`, `REDIS_PASSWORD`, `REDIS_PORT`.
+
+| Concern          | Elysia family            | NestJS family                                                                     |
+| ---------------- | ------------------------ | --------------------------------------------------------------------------------- |
+| App secret       | `APP_KEY`                | `APP_SECRET`                                                                      |
+| CORS origin      | `ALLOWED_HOST`           | `ALLOWED_ORIGINS`, `ALLOWED_METHODS`, `ALLOWED_HEADERS`, `MAX_AGE`, `CREDENTIALS` |
+| Front-end URL    | `CLIENT_URL`             | `FRONTEND_URL`                                                                    |
+| Mail credentials | `MAIL_USER`, `MAIL_PASS` | `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SUBJECT`                          |
+| Redis extra      | `REDIS_DB`               | `REDIS_TTL`                                                                       |
+| JWT              | `JWT_SECRET` only        | `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`    |
+
+**Elysia-only** (no NestJS equivalent): `APP_CLUSTER_MODE`, `APP_CLUSTER_WORKERS`, `LOG_LEVEL`,
+`CLICKHOUSE_HOST`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`. `APP_REUSE_PORT`
+exists in `clean-elysia` alone.
+
+**NestJS-only**: `API_DOCS_ENABLED`, `THROTTLER_TTL`, `THROTTLER_LIMIT`, `APP_VERSION`. Two are worth
+knowing about when porting _from_ Nest:
+
+- `API_DOCS_ENABLED` gates the docs UI on an explicit flag that defaults to `false`. The Elysia
+  family instead gates `/docs` on `AppConfig.APP_ENV !== "production"` — an implicit rule that
+  publishes the schema on any non-production deployment.
+- `THROTTLER_TTL` / `THROTTLER_LIMIT` drive the Nest throttler from the environment. The Elysia rate
+  limit is **hardcoded** in `src/libs/plugins/security.plugin.ts` (100 requests / 60s); there is no
+  environment variable to set.
+
+### Warning: `APP_JWT_SECRET` does not sign your tokens
+
+Both Elysia repos declare **two** JWT-looking variables, and only one of them does anything:
+
+| Variable         | Read by                                                              | Effect                                                  |
+| ---------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| `JWT_SECRET`     | `src/libs/config/jwt.config.ts` → `JWT_CONFIG.secret` → `AuthPlugin` | **This signs and verifies every token.**                |
+| `APP_JWT_SECRET` | `src/libs/config/app.config.ts` only                                 | Surfaced on `AppConfig` and read by nothing else. Dead. |
+
+Both have permissive defaults, so setting only `APP_JWT_SECRET` leaves tokens signed with the
+built-in default and the application starts without complaint. **Set `JWT_SECRET`.**
+
 ## Further Reading
 
 - [Envalid Documentation](https://github.com/af/envalid)

@@ -9,7 +9,7 @@ lands in `prisma/generated` (`generator client { output = "./generated" }`) and 
 - Models are **PascalCase singular**: `User`, `Role`, `Permission`, `UserRole`, `RolePermission`,
   `UserEmailVerification`, `PasswordReset`.
 - Fields are **camelCase**: `emailVerifiedAt`, `createdAt`, `updatedAt`, `userId`.
-- Enums are PascalCase with SCREAMING_CASE members: `UserStatus { ACTIVE INACTIVE BLOCKED }`.
+- Enums are PascalCase with SCREAMING_CASE members: `UserStatus { ACTIVE INACTIVE SUSPENDED BLOCKED }`.
 - No `@@map` / `@map` is used, so table and column names in Postgres match the model and field names
   exactly. Keep it that way — introducing `@map` on one model only would make the SQL half-translated.
 
@@ -35,9 +35,10 @@ model Role {
   `@updatedAt` attribute is what keeps the column current — a model without it silently never updates.
 - Strings that map to a bounded column carry `@db.VarChar(255)`. A bare `String` becomes `text`; be
   deliberate about which you want.
-- Uniqueness is declared on the field (`@unique`), not enforced in code. The service still checks it
-  first so the client gets a field-mapped `BadRequestError` instead of a raw constraint violation —
-  see [services-crud.md](./services-crud.md).
+- Uniqueness is declared on the field (`@unique`) **except on `User.email`**, where soft delete makes
+  the address reusable — see below. The service checks uniqueness first either way, so the client gets
+  a field-mapped `BadRequestError` rather than a raw constraint violation — see
+  [services-crud.md](./services-crud.md).
 
 ## Join tables use composite primary keys
 
@@ -64,31 +65,43 @@ modelling choice — the pair *is* the identity. Follow it for new join tables r
 Every relation currently reads `@relation(fields: [userId], references: [id])` with **no
 `onDelete`**, so Prisma's default applies. Two things follow:
 
-- Because there is no soft delete (below), deleting a `User` that has verification tokens, password
-  resets, or role assignments will fail or cascade depending on the relation's default — check before
-  adding a delete path to a new model.
+- `User` is soft-deleted (below), so its children are never orphaned by the normal delete path. Every
+  other model is hard-deleted, and deleting one that other tables reference will fail or cascade
+  depending on the relation's default — check before adding a delete path to a new model.
 - When a child row has no meaning without its parent, say so explicitly:
   `@relation(fields: [userId], references: [id], onDelete: Cascade)`.
 
-## Known schema gaps — do not treat these as the template
+## Soft delete
 
-Three things are missing here that the three sibling repos all have. They are recorded rather than
-silently copied forward; each is a migration, so fixing one is a deliberate change, not a drive-by.
+`User` carries `deletedAt DateTime?` (added 2026-08-20, matching the three sibling repos). It is the
+**only** soft-deletable model — `Role`, `Permission`, and the join tables are still hard-deleted.
 
-1. **No soft delete anywhere.** `deletedAt` does not appear in this file. Every delete is a hard
-   `DELETE`, reads have no `deletedAt` filter, and the audit trail is gone. The other three repos all
-   soft-delete users.
-2. **`UserStatus` is missing `SUSPENDED`.** It has `ACTIVE`, `INACTIVE`, `BLOCKED` where the siblings
-   have four values. Code or seed data ported from another repo that references `SUSPENDED` will fail
-   at the type level.
-3. **Token tables have no `usedAt` and no unique index on `token`.** `UserEmailVerification` and
-   `PasswordReset` both carry `expiresAt` (good — and the service does check it), but single-use is
-   enforced by deleting the row after consumption. That works, and it loses the audit trail, and a
-   failed delete leaves the token live.
+Two things follow, and both are load-bearing:
+
+- **Every read of `User` filters `deletedAt: null`.** All four read paths in `user.repository.ts` do
+  (`findAll`, `findOne`, `findByMail`, `userInformation`). `userInformation` is the one that matters
+  most: `AuthPlugin` resolves the caller's roles and permissions through it, so a missed filter there
+  would leave a deleted user fully authenticated.
+- **`email` deliberately has no `@unique`.** A soft-deleted user's address has to be reusable, and a
+  database-level unique constraint would reject the reuse with a raw `P2002` *after* the service's
+  own check has already passed. Uniqueness among live users is enforced in the service; the schema
+  carries plain `@@index([email])` and `@@index([deletedAt])`. Both sibling repos resolve it the same
+  way. The trade-off is real: nothing at the database level stops two live users sharing an address
+  if the service check is skipped or races.
+
+Adding soft delete to another model means adding the column **and** auditing every read of it in the
+same change. A `deletedAt` with unfiltered reads is worse than no soft delete at all, because the row
+looks gone in one place and is present in another.
+
+## Known schema gap — do not treat this as the template
+
+**Token tables have no `usedAt` and no unique index on `token`.** `UserEmailVerification` and
+`PasswordReset` both carry `expiresAt` (good — and the service does check it), but single-use is
+enforced by deleting the row after consumption. That works, and it loses the audit trail, and a
+failed delete leaves the token live.
 
 For a **new** token table: include `expiresAt`, a `@unique` on `token`, and prefer a `usedAt` stamp
-over deletion. For a new soft-deletable entity, raise the inconsistency rather than adding a lone
-`deletedAt` to one model — see [contradiction-halt.md](./contradiction-halt.md).
+over deletion.
 
 ## Enums are shared with TypeBox
 
@@ -140,6 +153,6 @@ Changing the catalogue means checking every `beforeHandle` in the same change.
 - Don't add a model without its inverse relation field on the other side — Prisma will not validate.
 - Don't add an enum value without generating a migration.
 - Don't introduce `@map` / `@@map` on a single model.
-- Don't add a `deletedAt` to one model in isolation; soft delete is all-or-nothing per entity and
-  needs the read paths changed with it.
+- Don't add a `deletedAt` to a model without auditing every read of that model in the same change.
+  A soft-delete column with unfiltered reads is worse than none.
 - Don't add a token table without `expiresAt`.

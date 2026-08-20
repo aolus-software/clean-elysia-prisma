@@ -143,11 +143,20 @@ APP_CLUSTER_MODE=true APP_CLUSTER_WORKERS=4 bun run start
 
 ## Docker
 
-Build and run with Docker Compose:
+Bring up postgres + redis + clickhouse + the app with Docker Compose:
 
 ```sh
-docker-compose up -d
+cp .env.example .env
+make docker-up        # compose up -d --build
+make docker-migrate   # prisma migrate deploy in a one-off app container
+make docker-seed      # seed the database
+make docker-logs      # tail app logs
+make docker-down      # stop the stack
 ```
+
+`make docker-deploy` does a full server deploy (`git pull` + rebuild + roll
+the stack + migrate). See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for the
+Docker, PM2, and cluster options in full.
 
 ## Project Structure
 
@@ -260,6 +269,18 @@ apart from the seeder.
 - `bun run db:clickhouse:migrate` - Run ClickHouse migrations
 - `bun run db:clickhouse:status` - Check migration status
 
+### Docker
+
+- `make docker-build` - Build the compose images
+- `make docker-up` - Start the full stack (build if needed)
+- `make docker-down` - Stop the stack
+- `make docker-restart` - Restart the app container
+- `make docker-logs` - Tail app logs
+- `make docker-ps` - Show stack status
+- `make docker-migrate` - Apply migrations in a one-off app container
+- `make docker-seed` - Seed the database in a one-off app container
+- `make docker-deploy` - `git pull` + build + up + migrate (server deploy)
+
 ### Makefile Commands
 
 You can also use `make` commands:
@@ -275,6 +296,7 @@ Comprehensive documentation is available in the [docs/](./docs/) directory:
 
 - [API Documentation](./docs/API_DOCUMENTATION.md) - API consumer guide
 - [Configuration](./docs/CONFIGURATION.md) - Environment variables reference
+- [Deployment](./docs/DEPLOYMENT.md) - Docker, PM2, and scaling options
 - [Error Handling](./docs/ERROR_HANDLING.md) - Error handling guide
 - [Plugins](./docs/PLUGINS.md) - Plugin system guide
 - [Security](./docs/SECURITY.md) - Security documentation
