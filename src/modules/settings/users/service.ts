@@ -121,12 +121,21 @@ export const UserService = {
 		return updated;
 	},
 
+	/**
+	 * Soft delete: stamps deletedAt rather than issuing a DELETE, so the row and
+	 * its audit trail survive. Every read in UserRepository filters deletedAt,
+	 * so a deleted user disappears from lists, detail, the auth lookup, and the
+	 * identity AuthPlugin resolves permissions from.
+	 */
 	async delete(id: string): Promise<void> {
 		const user = await UserRepository().findOne(id);
 		if (!user) {
 			throw new NotFoundError(t("user.notFound"));
 		}
-		await prisma.user.delete({ where: { id } });
+		await prisma.user.update({
+			where: { id },
+			data: { deletedAt: new Date() },
+		});
 	},
 
 	async sendEmailVerification(userId: string): Promise<void> {

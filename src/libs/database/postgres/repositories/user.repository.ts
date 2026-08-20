@@ -81,7 +81,8 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 				}
 			}
 
-			let whereCondition: Prisma.UserWhereInput = {};
+			// Soft delete: every read excludes rows with deletedAt set.
+			let whereCondition: Prisma.UserWhereInput = { deletedAt: null };
 			if (search) {
 				whereCondition = {
 					...whereCondition,
@@ -233,7 +234,7 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 
 		async findOne(id: string): Promise<UserDetail | null> {
 			const data = await db.user.findFirst({
-				where: { id },
+				where: { id, deletedAt: null },
 				select: {
 					id: true,
 					email: true,
@@ -280,7 +281,7 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 			updatedAt: Date;
 		} | null> {
 			return db.user.findFirst({
-				where: { email },
+				where: { email, deletedAt: null },
 				select: {
 					id: true,
 					email: true,
@@ -300,6 +301,7 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 					id: userId,
 					emailVerifiedAt: { not: null },
 					status: UserStatus.ACTIVE,
+					deletedAt: null,
 				},
 				select: {
 					id: true,

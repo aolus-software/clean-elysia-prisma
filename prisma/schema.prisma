@@ -16,22 +16,27 @@ datasource db {
 enum UserStatus {
   ACTIVE
   INACTIVE
+  SUSPENDED
   BLOCKED
 }
 
 model User {
   id              String     @id @default(uuid())
   name            String     @db.VarChar(255)
-  email           String     @unique @db.VarChar(255)
+  email           String     @db.VarChar(255)
   password        String     @db.VarChar(255)
   emailVerifiedAt DateTime?
   status          UserStatus @default(ACTIVE)
+  deletedAt       DateTime?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
   emailVerification UserEmailVerification[]
   passwordResets    PasswordReset[]
   userRoles         UserRole[]
+
+  @@index([email], name: "idx_user_email")
+  @@index([deletedAt], name: "idx_user_deleted_at")
 }
 
 model UserEmailVerification {
