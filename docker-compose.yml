@@ -73,26 +73,35 @@ services:
       timeout: 10s
       retries: 3
 
-  # app:
-  #   build: .
-  #   container_name: elysia-app
-  #   restart: unless-stopped
-  #   environment:
-  #     DATABASE_URL: postgres://postgres:postgres@postgres:5432/elysia_db
-  #     REDIS_HOST: redis
-  #     REDIS_PORT: 6379
-  #     REDIS_PASSWORD: password123
-  #     REDIS_DB: 0
-  #     PORT: 3000
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   networks:
-  #     - app_network
+  app:
+    build: .
+    container_name: elysia-app
+    restart: unless-stopped
+    # Most config comes from .env; the values below override it with the
+    # service hostnames that resolve inside the compose network (the .env
+    # defaults point at localhost, which is the host, not this container).
+    # Scaling: APP_CLUSTER_MODE=true runs one container across all cores.
+    # `--scale app=N` would need SO_REUSEPORT, which this repo does not
+    # implement yet — see docs/DEPLOYMENT.md.
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/elysia_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: password123
+      REDIS_DB: 0
+      CLICKHOUSE_HOST: http://clickhouse:8123
+      APP_PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app_network
 
 volumes:
   postgres_data:

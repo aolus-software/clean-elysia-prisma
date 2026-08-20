@@ -19,6 +19,7 @@ export default tseslint.config(
 			".agents/**/*",
 			".claude/**/*",
 			"prisma/generated/**/*",
+			"ecosystem.config.cjs",
 		],
 	},
 

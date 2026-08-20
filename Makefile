@@ -1,4 +1,4 @@
-.PHONY: help install dev build start lint lint-fix format typecheck db-generate db-migrate db-migrate-dev db-push db-pull db-studio db-drop db-seed db-clickhouse-migrate db-clickhouse-status fresh reset
+.PHONY: help install dev build start lint lint-fix format typecheck db-generate db-migrate db-migrate-dev db-push db-pull db-studio db-drop db-seed db-clickhouse-migrate db-clickhouse-status docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-migrate docker-seed docker-deploy fresh reset
 
 # Default target
 help:
@@ -35,6 +35,17 @@ help:
 	@echo "  Database (ClickHouse):"
 	@echo "    db-clickhouse-migrate - Run ClickHouse migrations"
 	@echo "    db-clickhouse-status  - Check ClickHouse migration status"
+	@echo ""
+	@echo "  Docker:"
+	@echo "    docker-build        - Build the compose images"
+	@echo "    docker-up           - Start the full stack (build if needed)"
+	@echo "    docker-down         - Stop the stack"
+	@echo "    docker-restart      - Restart the app container"
+	@echo "    docker-logs         - Tail app logs"
+	@echo "    docker-ps           - Show stack status"
+	@echo "    docker-migrate      - Apply migrations in a one-off app container"
+	@echo "    docker-seed         - Seed the database in a one-off app container"
+	@echo "    docker-deploy       - git pull + build + up + migrate (server deploy)"
 	@echo ""
 	@echo "  Workflows:"
 	@echo "    fresh               - Drop, push schema, and seed (dev only)"
@@ -98,6 +109,41 @@ db-clickhouse-migrate:
 
 db-clickhouse-status:
 	bun run db:clickhouse:status
+
+# Docker (compose stack — config comes from .env, see docs/DEPLOYMENT.md)
+# The Dockerfile is single-stage: there is no separate `migrator` image, so
+# migrations and seeds run in a one-off `app` container via `compose run`,
+# which joins the compose network and starts `depends_on` services first.
+docker-build:
+	docker compose build
+
+docker-up:
+	docker compose up -d --build
+
+docker-down:
+	docker compose down
+
+docker-restart:
+	docker compose restart app
+
+docker-logs:
+	docker compose logs -f app
+
+docker-ps:
+	docker compose ps
+
+docker-migrate:
+	docker compose run --rm app bunx --bun prisma migrate deploy
+
+docker-seed:
+	docker compose run --rm app bun run db:seed
+
+# Full server deploy: pull latest, rebuild, roll the stack, migrate
+docker-deploy:
+	git pull
+	docker compose up -d --build
+	$(MAKE) docker-migrate
+	@echo "Deployed!"
 
 # Combined workflows
 fresh: db-drop db-push db-seed

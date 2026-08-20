@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.git
+.env
+dist
+prisma/generated
+storage/logs
+*.log
+.DS_Store
+ecosystem.config.cjs
