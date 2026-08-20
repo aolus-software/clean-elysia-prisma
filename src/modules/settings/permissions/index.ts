@@ -1,5 +1,6 @@
 import { baseApp } from "@base";
 import { PermissionGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import { DatatableToolkit, ResponseToolkit } from "@utils";
 import { Elysia, t } from "elysia";
@@ -31,7 +32,7 @@ export const PermissionsModule = new Elysia({
 			return ResponseToolkit.paginated(
 				result.data,
 				result.meta,
-				"Permissions retrieved successfully",
+				trans("permission.listSuccess"),
 			);
 		},
 		{
@@ -52,7 +53,7 @@ export const PermissionsModule = new Elysia({
 			const permission = await PermissionService.detail(params.id);
 			return ResponseToolkit.success(
 				permission,
-				"Permission retrieved successfully",
+				trans("permission.detailSuccess"),
 			);
 		},
 		{
@@ -74,7 +75,7 @@ export const PermissionsModule = new Elysia({
 			const permission = await PermissionService.create(body.name, body.group);
 			return ResponseToolkit.created(
 				permission,
-				"Permission created successfully",
+				trans("permission.createSuccess"),
 			);
 		},
 		{
@@ -99,7 +100,7 @@ export const PermissionsModule = new Elysia({
 			);
 			return ResponseToolkit.success(
 				permission,
-				"Permission updated successfully",
+				trans("permission.updateSuccess"),
 			);
 		},
 		{
@@ -119,7 +120,7 @@ export const PermissionsModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			await PermissionService.delete(params.id);
-			return ResponseToolkit.success(null, "Permission deleted successfully");
+			return ResponseToolkit.success(null, trans("permission.deleteSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {

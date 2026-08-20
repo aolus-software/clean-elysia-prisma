@@ -1,5 +1,6 @@
 import { baseApp } from "@base";
 import { PermissionGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import { PermissionRepository, RoleRepository } from "@repositories";
 import { ResponseToolkit } from "@utils";
@@ -23,7 +24,7 @@ export const SelectOptionModule = new Elysia({
 			const permissions = await PermissionRepository().selectOptions();
 			return ResponseToolkit.success(
 				permissions,
-				"Permission options retrieved successfully",
+				trans("selectOption.permissionsSuccess"),
 			);
 		},
 		{
@@ -51,10 +52,7 @@ export const SelectOptionModule = new Elysia({
 				id: role.id,
 				name: role.name,
 			}));
-			return ResponseToolkit.success(
-				roles,
-				"Role options retrieved successfully",
-			);
+			return ResponseToolkit.success(roles, trans("selectOption.rolesSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {

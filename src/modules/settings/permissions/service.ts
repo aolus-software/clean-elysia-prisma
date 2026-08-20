@@ -1,4 +1,5 @@
 import { BadRequestError, NotFoundError } from "@errors";
+import { t } from "@i18n";
 import { PermissionRepository } from "@repositories";
 import { DatatableType, PaginationResponse, PermissionList } from "@types";
 
@@ -12,7 +13,7 @@ export const PermissionService = {
 	async detail(id: string): Promise<PermissionList> {
 		const permission = await PermissionRepository().findOne(id);
 		if (!permission) {
-			throw new NotFoundError("Permission not found");
+			throw new NotFoundError(t("permission.notFound"));
 		}
 		return permission;
 	},
@@ -23,8 +24,8 @@ export const PermissionService = {
 	): Promise<{ id: string; name: string; group: string }> {
 		const existing = await PermissionRepository().findByName(name);
 		if (existing) {
-			throw new BadRequestError("Permission already exists", [
-				{ field: "name", message: "Permission with this name already exists" },
+			throw new BadRequestError(t("permission.alreadyExists"), [
+				{ field: "name", message: t("permission.nameExists") },
 			]);
 		}
 		return PermissionRepository().create(name, group);
@@ -37,13 +38,13 @@ export const PermissionService = {
 	): Promise<{ id: string; name: string; group: string }> {
 		const permission = await PermissionRepository().findOne(id);
 		if (!permission) {
-			throw new NotFoundError("Permission not found");
+			throw new NotFoundError(t("permission.notFound"));
 		}
 
 		const existing = await PermissionRepository().findByName(name);
 		if (existing && existing.id !== id) {
-			throw new BadRequestError("Permission already exists", [
-				{ field: "name", message: "Permission with this name already exists" },
+			throw new BadRequestError(t("permission.alreadyExists"), [
+				{ field: "name", message: t("permission.nameExists") },
 			]);
 		}
 
@@ -53,7 +54,7 @@ export const PermissionService = {
 	async delete(id: string): Promise<void> {
 		const permission = await PermissionRepository().findOne(id);
 		if (!permission) {
-			throw new NotFoundError("Permission not found");
+			throw new NotFoundError(t("permission.notFound"));
 		}
 		await PermissionRepository().delete(id);
 	},

@@ -1,5 +1,6 @@
 import { baseApp } from "@base";
 import { PermissionGuard, RoleGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import { DatatableToolkit, ResponseToolkit } from "@utils";
 import { Elysia, t } from "elysia";
@@ -33,7 +34,7 @@ export const RolesModule = new Elysia({
 			return ResponseToolkit.paginated(
 				result.data,
 				result.meta,
-				"Roles retrieved successfully",
+				trans("role.listSuccess"),
 			);
 		},
 		{
@@ -52,7 +53,7 @@ export const RolesModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			const role = await RoleService.detail(params.id);
-			return ResponseToolkit.success(role, "Role retrieved successfully");
+			return ResponseToolkit.success(role, trans("role.detailSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -72,7 +73,7 @@ export const RolesModule = new Elysia({
 		async ({ body, set }) => {
 			set.status = 201;
 			const role = await RoleService.create(body.name);
-			return ResponseToolkit.created(role, "Role created successfully");
+			return ResponseToolkit.created(role, trans("role.createSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -90,7 +91,7 @@ export const RolesModule = new Elysia({
 		"/:id",
 		async ({ params, body }) => {
 			const role = await RoleService.update(params.id, body.name);
-			return ResponseToolkit.success(role, "Role updated successfully");
+			return ResponseToolkit.success(role, trans("role.updateSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -109,7 +110,7 @@ export const RolesModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			await RoleService.delete(params.id);
-			return ResponseToolkit.success(null, "Role deleted successfully");
+			return ResponseToolkit.success(null, trans("role.deleteSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -129,7 +130,7 @@ export const RolesModule = new Elysia({
 			await RoleService.syncPermissions(params.id, body.permission_ids);
 			return ResponseToolkit.success(
 				null,
-				"Role permissions synced successfully",
+				trans("role.syncPermissionsSuccess"),
 			);
 		},
 		{

@@ -1,5 +1,6 @@
 import { baseApp } from "@base";
 import { PermissionGuard, RoleGuard } from "@guards";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import { DatatableToolkit, ResponseToolkit } from "@utils";
 import { Elysia, t } from "elysia";
@@ -35,7 +36,7 @@ export const UsersModule = new Elysia({
 			return ResponseToolkit.paginated(
 				result.data,
 				result.meta,
-				"Users retrieved successfully",
+				trans("user.listSuccess"),
 			);
 		},
 		{
@@ -54,7 +55,7 @@ export const UsersModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			const user = await UserService.detail(params.id);
-			return ResponseToolkit.success(user, "User retrieved successfully");
+			return ResponseToolkit.success(user, trans("user.detailSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -79,7 +80,7 @@ export const UsersModule = new Elysia({
 				status: body.status,
 				role_ids: body.role_ids,
 			});
-			return ResponseToolkit.created(user, "User created successfully");
+			return ResponseToolkit.created(user, trans("user.createSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -102,7 +103,7 @@ export const UsersModule = new Elysia({
 				password: body.password,
 				status: body.status,
 			});
-			return ResponseToolkit.success(user, "User updated successfully");
+			return ResponseToolkit.success(user, trans("user.updateSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -121,7 +122,7 @@ export const UsersModule = new Elysia({
 		"/:id",
 		async ({ params }) => {
 			await UserService.delete(params.id);
-			return ResponseToolkit.success(null, "User deleted successfully");
+			return ResponseToolkit.success(null, trans("user.deleteSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -139,7 +140,7 @@ export const UsersModule = new Elysia({
 		"/:id/sync-roles",
 		async ({ params, body }) => {
 			await UserService.syncRoles(params.id, body.role_ids);
-			return ResponseToolkit.success(null, "User roles synced successfully");
+			return ResponseToolkit.success(null, trans("user.syncRolesSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -159,10 +160,7 @@ export const UsersModule = new Elysia({
 		"/:id/send-email-verification",
 		async ({ params }) => {
 			await UserService.sendEmailVerification(params.id);
-			return ResponseToolkit.success(
-				null,
-				"Verification email sent successfully",
-			);
+			return ResponseToolkit.success(null, trans("user.verificationEmailSent"));
 		},
 		{
 			beforeHandle: ({ user }) => {
@@ -182,7 +180,7 @@ export const UsersModule = new Elysia({
 			await UserService.sendPasswordReset(params.id);
 			return ResponseToolkit.success(
 				null,
-				"Password reset email sent successfully",
+				trans("user.passwordResetEmailSent"),
 			);
 		},
 		{
@@ -201,7 +199,7 @@ export const UsersModule = new Elysia({
 		"/:id/reset-password",
 		async ({ params, body }) => {
 			await UserService.resetPassword(params.id, body.password);
-			return ResponseToolkit.success(null, "Password reset successfully");
+			return ResponseToolkit.success(null, trans("user.passwordResetSuccess"));
 		},
 		{
 			beforeHandle: ({ user }) => {

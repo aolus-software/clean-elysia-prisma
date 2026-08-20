@@ -1,5 +1,6 @@
 import { prisma } from "@database";
 import { BadRequestError, NotFoundError } from "@errors";
+import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserStatus } from "@prisma-generated";
 import { UserRepository } from "@repositories";
@@ -19,7 +20,7 @@ export const UserService = {
 	async detail(id: string): Promise<UserDetail> {
 		const user = await UserRepository().findOne(id);
 		if (!user) {
-			throw new NotFoundError("User not found");
+			throw new NotFoundError(t("user.notFound"));
 		}
 		return user;
 	},
@@ -33,8 +34,8 @@ export const UserService = {
 	}): Promise<UserDetail> {
 		const existing = await UserRepository().findByMail(data.email);
 		if (existing) {
-			throw new BadRequestError("Email already in use", [
-				{ field: "email", message: "A user with this email already exists" },
+			throw new BadRequestError(t("user.emailInUse"), [
+				{ field: "email", message: t("user.emailExists") },
 			]);
 		}
 
@@ -63,7 +64,7 @@ export const UserService = {
 
 		const created = await UserRepository().findOne(user.id);
 		if (!created) {
-			throw new BadRequestError("Failed to retrieve created user", []);
+			throw new BadRequestError(t("user.createRetrieveFailed"), []);
 		}
 		return created;
 	},
@@ -79,16 +80,16 @@ export const UserService = {
 	): Promise<UserDetail> {
 		const user = await UserRepository().findOne(id);
 		if (!user) {
-			throw new NotFoundError("User not found");
+			throw new NotFoundError(t("user.notFound"));
 		}
 
 		if (data.email) {
 			const existing = await UserRepository().findByMail(data.email);
 			if (existing && existing.id !== id) {
-				throw new BadRequestError("Email already in use", [
+				throw new BadRequestError(t("user.emailInUse"), [
 					{
 						field: "email",
-						message: "A user with this email already exists",
+						message: t("user.emailExists"),
 					},
 				]);
 			}
@@ -115,7 +116,7 @@ export const UserService = {
 
 		const updated = await UserRepository().findOne(id);
 		if (!updated) {
-			throw new BadRequestError("Failed to retrieve updated user", []);
+			throw new BadRequestError(t("user.updateRetrieveFailed"), []);
 		}
 		return updated;
 	},
@@ -123,7 +124,7 @@ export const UserService = {
 	async delete(id: string): Promise<void> {
 		const user = await UserRepository().findOne(id);
 		if (!user) {
-			throw new NotFoundError("User not found");
+			throw new NotFoundError(t("user.notFound"));
 		}
 		await prisma.user.delete({ where: { id } });
 	},
@@ -131,28 +132,28 @@ export const UserService = {
 	async sendEmailVerification(userId: string): Promise<void> {
 		const existing = await UserRepository().findOne(userId);
 		if (!existing) {
-			throw new NotFoundError("User not found");
+			throw new NotFoundError(t("user.notFound"));
 		}
 
 		try {
 			await AuthMailService.sendVerificationEmail(userId);
 		} catch (error) {
 			log.error({ error, userId }, "Failed to send verification email");
-			throw new BadRequestError("Failed to send verification email", []);
+			throw new BadRequestError(t("user.verificationEmailFailed"), []);
 		}
 	},
 
 	async sendPasswordReset(userId: string): Promise<void> {
 		const existing = await UserRepository().findOne(userId);
 		if (!existing) {
-			throw new NotFoundError("User not found");
+			throw new NotFoundError(t("user.notFound"));
 		}
 
 		try {
 			await AuthMailService.sendResetPasswordEmail(userId);
 		} catch (error) {
 			log.error({ error, userId }, "Failed to send password reset email");
-			throw new BadRequestError("Failed to send password reset email", []);
+			throw new BadRequestError(t("user.passwordResetEmailFailed"), []);
 		}
 	},
 
@@ -163,7 +164,7 @@ export const UserService = {
 	async resetPassword(userId: string, newPassword: string): Promise<void> {
 		const existing = await UserRepository().findOne(userId);
 		if (!existing) {
-			throw new NotFoundError("User not found");
+			throw new NotFoundError(t("user.notFound"));
 		}
 
 		const hashedPassword = await Hash.generateHash(newPassword);
@@ -176,7 +177,7 @@ export const UserService = {
 	async syncRoles(userId: string, roleIds: string[]): Promise<void> {
 		const user = await UserRepository().findOne(userId);
 		if (!user) {
-			throw new NotFoundError("User not found");
+			throw new NotFoundError(t("user.notFound"));
 		}
 
 		await prisma.userRole.deleteMany({ where: { userId } });

@@ -1,6 +1,7 @@
 import { Cache, UserInformationCacheKey } from "@cache";
 import { prisma } from "@database";
 import { BadRequestError } from "@errors";
+import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserRepository } from "@repositories";
 import { UserInformation } from "@types";
@@ -13,37 +14,37 @@ export const AuthService = {
 	): Promise<{ user: UserInformation }> {
 		const existing = await UserRepository().findByMail(email);
 		if (!existing) {
-			throw new BadRequestError("Invalid credentials", [
-				{ field: "email", message: "Invalid email or password" },
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.invalidCredentials") },
 			]);
 		}
 
 		const isPasswordValid = await Hash.compareHash(password, existing.password);
 		if (!isPasswordValid) {
-			throw new BadRequestError("Invalid credentials", [
-				{ field: "password", message: "Invalid email or password" },
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "password", message: t("auth.invalidCredentials") },
 			]);
 		}
 
 		if (existing.status !== "ACTIVE") {
-			throw new BadRequestError("Account is not active", [
-				{ field: "email", message: "Your account is not active" },
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.accountInactive") },
 			]);
 		}
 
 		if (!existing.emailVerifiedAt) {
-			throw new BadRequestError("Email not verified", [
+			throw new BadRequestError(t("auth.validationError"), [
 				{
 					field: "email",
-					message: "Please verify your email before logging in",
+					message: t("auth.emailNotVerified"),
 				},
 			]);
 		}
 
 		const user = await UserRepository().userInformation(existing.id);
 		if (!user) {
-			throw new BadRequestError("User not found", [
-				{ field: "email", message: "User not found" },
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.userNotFound") },
 			]);
 		}
 
@@ -54,8 +55,8 @@ export const AuthService = {
 	async signUp(name: string, email: string, password: string) {
 		const existing = await UserRepository().findByMail(email);
 		if (existing) {
-			throw new BadRequestError("Email already in use", [
-				{ field: "email", message: "This email is already registered" },
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.emailAlreadyRegistered") },
 			]);
 		}
 
@@ -90,8 +91,8 @@ export const AuthService = {
 		});
 
 		if (!record) {
-			throw new BadRequestError("Invalid or expired verification token", [
-				{ field: "token", message: "Token is invalid or has expired" },
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "token", message: t("auth.invalidVerificationToken") },
 			]);
 		}
 
@@ -99,11 +100,10 @@ export const AuthService = {
 			await prisma.userEmailVerification.deleteMany({
 				where: { userId: record.userId },
 			});
-			throw new BadRequestError("Verification token has expired", [
+			throw new BadRequestError(t("auth.validationError"), [
 				{
 					field: "token",
-					message:
-						"Token has expired. Please request a new verification email.",
+					message: t("auth.verificationTokenExpired"),
 				},
 			]);
 		}
@@ -132,8 +132,8 @@ export const AuthService = {
 		const record = await prisma.passwordReset.findFirst({ where: { token } });
 
 		if (!record) {
-			throw new BadRequestError("Invalid or expired reset token", [
-				{ field: "token", message: "Token is invalid or has expired" },
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "token", message: t("auth.invalidResetToken") },
 			]);
 		}
 
@@ -141,10 +141,10 @@ export const AuthService = {
 			await prisma.passwordReset.deleteMany({
 				where: { userId: record.userId },
 			});
-			throw new BadRequestError("Reset token has expired", [
+			throw new BadRequestError(t("auth.validationError"), [
 				{
 					field: "token",
-					message: "Token has expired. Please request a new password reset.",
+					message: t("auth.resetTokenExpired"),
 				},
 			]);
 		}

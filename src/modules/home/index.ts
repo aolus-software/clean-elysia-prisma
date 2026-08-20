@@ -1,5 +1,6 @@
 import { baseApp } from "@base";
 import { AppConfig } from "@config";
+import { t as trans } from "@i18n";
 import { ResponseToolkit } from "@utils";
 import { Elysia } from "elysia";
 
@@ -16,7 +17,7 @@ export const HomeModule = new Elysia({
 		() => {
 			return ResponseToolkit.success(
 				{ name: AppConfig.APP_NAME, env: AppConfig.APP_ENV },
-				"Welcome",
+				trans("home.welcome"),
 			);
 		},
 		{

@@ -1,5 +1,6 @@
 import { baseApp } from "@base";
 import { prisma, RedisClient } from "@database";
+import { t as trans } from "@i18n";
 import { ResponseToolkit } from "@utils";
 import { Elysia } from "elysia";
 
@@ -18,7 +19,7 @@ export const HealthModule = new Elysia({
 			await RedisClient.getRedisClient().ping();
 			return ResponseToolkit.success(
 				{ database: "ok", redis: "ok" },
-				"Healthy",
+				trans("health.healthy"),
 			);
 		},
 		{

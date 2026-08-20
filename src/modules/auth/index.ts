@@ -1,6 +1,7 @@
 import { baseApp } from "@base";
 import { JWT_CONFIG } from "@config";
 import jwtPlugin from "@elysiajs/jwt";
+import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
 import { ResponseToolkit } from "@utils";
 import { Elysia } from "elysia";
@@ -44,7 +45,7 @@ export const AuthModule = new Elysia({
 						status: user.status,
 					},
 				},
-				"Login successful",
+				trans("auth.loginSuccess"),
 			);
 		},
 		{
@@ -75,7 +76,7 @@ export const AuthModule = new Elysia({
 					createdAt: user.createdAt,
 					updatedAt: user.updatedAt,
 				},
-				"Registration successful. Please check your email to verify your account.",
+				trans("auth.registerSuccess"),
 			);
 		},
 		{
@@ -91,7 +92,7 @@ export const AuthModule = new Elysia({
 		"/verify-email",
 		async ({ body }) => {
 			await AuthService.verifyEmail(body.token);
-			return ResponseToolkit.success(null, "Email verified successfully");
+			return ResponseToolkit.success(null, trans("auth.emailVerified"));
 		},
 		{
 			body: VerifyEmailSchema,
@@ -109,7 +110,7 @@ export const AuthModule = new Elysia({
 			await AuthService.resendVerification(body.email);
 			return ResponseToolkit.success(
 				null,
-				"If your email is registered and unverified, a new verification link has been sent",
+				trans("auth.resendVerificationSent"),
 			);
 		},
 		{
@@ -125,10 +126,7 @@ export const AuthModule = new Elysia({
 		"/forgot-password",
 		async ({ body }) => {
 			await AuthService.forgotPassword(body.email);
-			return ResponseToolkit.success(
-				null,
-				"If that email is registered, a password reset link has been sent",
-			);
+			return ResponseToolkit.success(null, trans("auth.forgotPasswordSent"));
 		},
 		{
 			body: ForgotPasswordSchema,
@@ -143,7 +141,7 @@ export const AuthModule = new Elysia({
 		"/reset-password",
 		async ({ body }) => {
 			await AuthService.resetPassword(body.token, body.password);
-			return ResponseToolkit.success(null, "Password reset successfully");
+			return ResponseToolkit.success(null, trans("auth.passwordReset"));
 		},
 		{
 			body: ResetPasswordSchema,
@@ -169,7 +167,7 @@ export const AuthModule = new Elysia({
 					createdAt: user.createdAt,
 					updatedAt: user.updatedAt,
 				},
-				"User information retrieved",
+				trans("auth.meRetrieved"),
 			);
 		},
 		{
