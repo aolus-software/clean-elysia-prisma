@@ -1,4 +1,9 @@
-import { DatatableQueryParams } from "@types";
+import {
+	permissionFilterableFields,
+	permissionFilterExample,
+	permissionSortableFields,
+} from "@repositories";
+import { datatableQueryParams } from "@types";
 import { commonPaginatedResponse, commonResponse } from "@utils";
 import { t } from "elysia";
 
@@ -32,14 +37,22 @@ export const PermissionDataSchema = t.Object({
 // QUERY SCHEMAS
 // ============================================
 
-export { DatatableQueryParams as PermissionQuerySchema };
+/* Documented against the repository's own allow-lists, so /docs shows exactly the
+   sort values and filter keys PermissionRepository().findAll validates against. */
+export const PermissionQuerySchema = datatableQueryParams({
+	sortFields: permissionSortableFields,
+	filterFields: permissionFilterableFields,
+	filterExample: permissionFilterExample,
+});
 
 // ============================================
 // RESPONSE SCHEMAS
 // ============================================
 
-export const PermissionListResponseSchema =
-	commonPaginatedResponse(PermissionDataSchema);
+export const PermissionListResponseSchema = commonPaginatedResponse(
+	PermissionDataSchema,
+	{ include: [200, 400, 401, 403, 422, 500] },
+);
 
 export const PermissionDetailResponseSchema = commonResponse(
 	PermissionDataSchema,

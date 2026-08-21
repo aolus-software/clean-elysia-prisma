@@ -75,15 +75,17 @@ Out of scope:
 These are documented rather than treated as vulnerabilities. Review every one of them before
 deploying anything built on this template.
 
-- **Every secret in `@config` has a working default.** `src/libs/config/env.config.ts` gives
-  `APP_KEY`, `APP_JWT_SECRET`, `JWT_SECRET`, `REDIS_PASSWORD`, and the mail credentials envalid
-  defaults, so a missing variable does **not** fail startup — the app boots with a publicly known
+- **Every secret in `@config` has a working default except `JWT_SECRET`.**
+  `src/libs/config/env.config.ts` gives `APP_KEY`, `REDIS_PASSWORD`, and the mail credentials
+  envalid defaults, so a missing one does **not** fail startup — the app boots with a publicly known
   value. Set all of them explicitly and verify at deploy time; do not rely on startup validation to
   catch an omission.
-- **`JWT_SECRET` and `APP_JWT_SECRET` are two different variables.** `JWT_CONFIG`
-  (`src/libs/config/jwt.config.ts`) signs tokens with `JWT_SECRET`, which is **not** listed in
-  `.env.example`. If you only set `APP_JWT_SECRET`, tokens are signed with the default
-  `"your-secret-key"` and anyone can forge them. Set `JWT_SECRET`.
+- **`JWT_SECRET` is required and has no default.** `JWT_CONFIG`
+  (`src/libs/config/jwt.config.ts`) signs and verifies every token with it, so it is declared
+  `str()` with no fallback and the process refuses to boot unconfigured. It used to default to
+  `"your-secret-key"`, and a second variable `APP_JWT_SECRET` sat next to it on `AppConfig` reading
+  as if it were the signing key while being read by nothing — so an operator who set only that one
+  shipped forgeable tokens. `APP_JWT_SECRET` was removed on 2026-08-21.
 - **CORS defaults to `*`.** `CORSConfig` falls back to `origin: "*"` when `ALLOWED_HOST` is empty.
   Set `ALLOWED_HOST` to your real front-end origins (comma-separated) before exposing the API.
   `credentials` is `false` in the shipped config — if you turn it on, a wildcard origin becomes

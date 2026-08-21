@@ -1,38 +1,31 @@
 # Deployment
 
-Three ways to run this app in production, plus one option this repo does not
-support yet. The entry point is `src/index.ts`.
+Four ways to run this app in production. The entry point is `src/index.ts`.
 
-| Option           | Multi-core | How it scales                | Best for                       |
-| ---------------- | ---------- | ---------------------------- | ------------------------------ |
-| 1. Node cluster  | ✅         | In-process worker forks      | Single VM/container, simplest  |
-| 2. PM2           | ⚠️         | Supervises one process       | VMs needing supervision/reload |
-| 3. Docker        | ✅         | Cluster inside one container | Containerized infra            |
-| — Bun reuse-port | ❌         | Not implemented — see below  | —                              |
+| Option            | Multi-core | How it scales                         | Best for                       |
+| ----------------- | ---------- | ------------------------------------- | ------------------------------ |
+| 1. Node cluster   | ✅         | In-process worker forks               | Single VM/container, simplest  |
+| 2. Bun reuse-port | ✅         | N independent processes, SO_REUSEPORT | Bare metal / systemd           |
+| 3. PM2            | ✅         | PM2 forks N reuse-port processes      | VMs needing supervision/reload |
+| 4. Docker         | ✅         | Cluster inside one container          | Containerized infra            |
 
 ## Scaling flags
 
-`src/index.ts` reads exactly two flags and decides at boot:
+`src/index.ts` and `src/server.ts` read three flags and decide at boot:
 
 - `APP_CLUSTER_MODE` — when `true`, the primary forks `APP_CLUSTER_WORKERS`
   workers (0 = every CPU core) using Node's `cluster` module, and restarts
   any worker that exits.
 - `APP_CLUSTER_WORKERS` — worker count for the above.
+- `APP_REUSE_PORT` — when `true`, each process binds the port with
+  `reusePort: true` (`src/server.ts`); the kernel load-balances. You launch N
+  processes yourself (PM2, systemd, `--scale`).
 
-Both are validated in `src/libs/config/env.config.ts` and surfaced through
-`AppConfig`.
+All three are validated in `src/libs/config/env.config.ts` and surfaced
+through `AppConfig`.
 
-> **No SO_REUSEPORT in this repo.** `src/server.ts` calls
-> `.listen(AppConfig.APP_PORT)` with no `reusePort` option, and there is no
-> `APP_REUSE_PORT` variable. Running several processes on one port therefore
-> fails with `EADDRINUSE`. Everything below that would need reuse-port —
-> multiple PM2 instances, `docker compose up --scale app=N` — is called out
-> as unsupported rather than silently recommended. To add it: validate
-> `APP_REUSE_PORT` in `env.config.ts`, surface it in `app.config.ts`, and
-> pass `reusePort: true` to `.listen()` in `src/server.ts`.
-
-**Pick exactly one scaling strategy.** Cluster mode and any future
-reuse-port setup both bind the same port and will fight each other.
+**Pick exactly one scaling strategy.** Cluster mode and reuse-port both bind
+the same port and will fight each other if enabled together.
 
 ## 1. Node cluster (built in)
 
@@ -46,11 +39,26 @@ APP_CLUSTER_MODE=true APP_CLUSTER_WORKERS=0 bun run src/index.ts
 Trade-off: a single OS process tree. If the primary dies, all workers go with
 it — pair it with a supervisor (systemd / Docker `restart`) for resilience.
 
-## 2. PM2 — `ecosystem.config.cjs`
+## 2. Bun reuse-port
 
-PM2 runs the app in **fork** mode, from source. We avoid PM2's `cluster`
-exec_mode because it depends on Node's `cluster` module, which Bun only
-partially supports.
+Each process is fully independent; the kernel spreads connections via
+SO_REUSEPORT. No primary, no shared socket fd.
+
+```sh
+# Launch as many as you want — all on APP_PORT
+APP_REUSE_PORT=true bun run src/index.ts &
+APP_REUSE_PORT=true bun run src/index.ts &
+APP_REUSE_PORT=true bun run src/index.ts &
+```
+
+Leave `APP_CLUSTER_MODE=false`. In practice you let a supervisor (PM2 below,
+or systemd templated units) own the N processes rather than `&`.
+
+## 3. PM2 — `ecosystem.config.cjs`
+
+PM2 supervises N fork-mode Bun processes, each with `APP_REUSE_PORT=true`,
+running from source. We avoid PM2's `cluster` exec_mode because it depends on
+Node's `cluster` module, which Bun only partially supports.
 
 ```sh
 bun add -g pm2                      # or npm i -g pm2
@@ -63,22 +71,21 @@ pm2 save && pm2 startup             # persist across reboots
 
 Notes specific to this repo:
 
-- `instances: 1`. Without reuse-port a second instance cannot bind the port.
-  The config file still reads `PM2_INSTANCES`, so
-  `PM2_INSTANCES=4 pm2 start ecosystem.config.cjs --env production` works,
-  but it only becomes useful once reuse-port is wired up and `instances` is
-  changed to `Number(process.env.PM2_INSTANCES) || "max"`. It is a
+- `instances` defaults to `max` (all cores), with `APP_REUSE_PORT=true` in
+  both env blocks so the processes share `APP_PORT`. Override the count with
+  `PM2_INSTANCES=4 pm2 start ecosystem.config.cjs --env production`. It is a
   launcher-side override, not an application variable — it is deliberately
   absent from `.env.example` and from `env.config.ts`.
-- `APP_CLUSTER_MODE=false` is set in both env blocks. To use all cores under
-  PM2, flip it to `"true"` in `env_production` and keep `instances: 1`: PM2
-  then supervises the cluster primary and the primary owns the forks.
+- `APP_CLUSTER_MODE=false` is set in both env blocks — reuse-port owns the
+  scaling. The alternative is in-process clustering: flip it to `"true"`,
+  drop `APP_REUSE_PORT`, and pin `instances: 1` so PM2 supervises the cluster
+  primary and the primary owns the forks. Never both at once.
 - Runs from source (`script: "src/index.ts"`, `interpreter: "bun"`) — no
   build step, because Bun resolves the tsconfig `paths` aliases directly.
   The generated Prisma client (`prisma/generated/`) is not source, so
   `make db-generate` must have run.
 
-## 3. Docker
+## 4. Docker
 
 The `Dockerfile` is **single-stage** (no `development` / `migrator` /
 `release` targets). It installs the full dependency set — the `prisma` CLI is
@@ -107,9 +114,12 @@ CLICKHOUSE_HOST: http://clickhouse:8123
 ```
 
 Set `APP_CLUSTER_MODE=true` in `.env` to use every core in the container.
-`docker compose up -d --scale app=N` is **not** available: N containers
-cannot all publish `3000:3000`, and without reuse-port they could not share
-a port even behind a proxy.
+
+`docker compose up -d --scale app=N` needs the published-port mapping removed
+from the `app` service first — N containers cannot all publish `3000:3000`.
+Put them behind a reverse proxy on the compose network and set
+`APP_CLUSTER_MODE=false` + `APP_REUSE_PORT=true`, or keep one container and
+let cluster mode use the cores inside it.
 
 ```sh
 make docker-up        # compose up -d --build
@@ -172,7 +182,8 @@ Seeding is `bun run db:seed` (`make docker-seed` in the stack).
 ## Choosing
 
 - One box, want simplest → **node cluster** (option 1) under systemd/Docker.
+- Bare metal with systemd templated units → **reuse-port** (option 2).
 - Need zero-downtime reloads and process metrics on a VM → **PM2**
-  (option 2), with cluster mode on if you need all cores.
-- Containerized → **Docker** (option 3): cluster inside one container.
-  Horizontal replicas behind a proxy need reuse-port support first.
+  (option 3), which is reuse-port with supervision on top.
+- Containerized → **Docker** (option 4): cluster inside one container, or
+  reuse-port replicas behind a proxy.

@@ -126,7 +126,7 @@ reached** rather than letting silence imply they were clean.
    transaction boundaries owned by the service (never the repository) per `services.md` rule 6 and
    `repositories.md` rule 2. Also flag multi-write sequences that should be in `prisma.$transaction`
    and are not.
-5. **Secrets & sensitive data at rest** — password hashes, `APP_JWT_SECRET`, `APP_KEY`, reset and
+5. **Secrets & sensitive data at rest** — password hashes, `JWT_SECRET`, `APP_KEY`, reset and
    verification tokens absent from logs, response schemas, OpenAPI examples, error messages, and
    repository `select` shapes; `Hash` from `@utils` used for passwords rather than a hand-rolled
    hash; `encrypt` used where reversible storage is intended; env read through `@config` and never
@@ -199,7 +199,7 @@ reached** rather than letting silence imply they were clean.
 - **Cite `file:line` for every finding.** No finding without a location.
 - **Explain, don't just point.** A finding a reader must open the code to understand has not been
   written yet.
-- **Known issues already on record** in `.claude/rules/contradiction-halt.md` — the uninvoked
-  guards, the space-separated permission names, the absent soft delete, the three-value `UserStatus`,
-  the missing test runner, the missing deployment config — are still swept and still written up. A
-  rule noting them is not a substitute for the report carrying them with evidence and consequences.
+- **Invariants already on record** in `.claude/rules/contradiction-halt.md` — guard coverage, the
+  space-separated permission names, the soft-delete read filter, the missing test runner, the
+  cluster/reuse-port conflict — are still swept and still written up. A rule noting an invariant is
+  not a substitute for the report carrying a breach of it with evidence and consequences.

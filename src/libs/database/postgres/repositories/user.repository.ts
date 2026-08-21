@@ -3,12 +3,48 @@ import { BadRequestError } from "@errors";
 import { Prisma, UserStatus } from "@prisma-generated";
 import {
 	DatatableType,
+	FilterField,
+	filterFieldNames,
 	PaginationResponse,
 	UserDetail,
 	UserInformation,
 	UserList,
 } from "@types";
-import { DateToolkit } from "@utils";
+import { DatatableToolkit } from "@utils";
+
+/* The ?sort= and filter[...] values this repository accepts. Exported so the
+   module can document them in OpenAPI from one source of truth rather than
+   restating the list. An unrecognised value is rejected, not ignored.
+
+   `sortFields` must contain `defaultSort` — Elysia materialises the schema
+   default into the query object, so a default missing from this list rejects
+   every request that omits ?sort=. */
+export const userSortableFields = [
+	"id",
+	"name",
+	"email",
+	"status",
+	"createdAt",
+	"updatedAt",
+];
+export const userFilterableFields: FilterField[] = [
+	"name",
+	"email",
+	{ field: "status", enum: Object.values(UserStatus) },
+	{ field: "roles", kind: "list" },
+	{ field: "createdAt", kind: "date" },
+	{ field: "updatedAt", kind: "date" },
+];
+
+/* Example value per non-enum filter key, rendered as the concrete sample in
+   /docs. Enum keys take their example from the enum. */
+export const userFilterExample: Record<string, string> = {
+	name: "jane",
+	email: "jane@example.com",
+	roles: "admin,editor",
+	createdAt: "2024-01-01,2024-12-31",
+	updatedAt: "2024-01-01,2024-12-31",
+};
 
 export function UserRepository(tx?: Prisma.TransactionClient) {
 	const db = tx || prisma;
@@ -23,24 +59,9 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 			const finalLimit = Number(perPage);
 			const finalPage = Number(page);
 
-			const allowedSort = [
-				"id",
-				"name",
-				"email",
-				"status",
-				"createdAt",
-				"updatedAt",
-			];
+			const allowedSort = userSortableFields;
 			const sortDirectionAllowed = ["asc", "desc"];
-			const allowedFilter = [
-				"id",
-				"name",
-				"email",
-				"status",
-				"roles",
-				"createdAt",
-				"updatedAt",
-			];
+			const allowedFilter = filterFieldNames(userFilterableFields);
 
 			let sort = queryParam.sort;
 			if (!sort) {
@@ -81,6 +102,11 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 				}
 			}
 
+			DatatableToolkit.assertFilterEnums(
+				queryParam.filter,
+				userFilterableFields,
+			);
+
 			// Soft delete: every read excludes rows with deletedAt set.
 			let whereCondition: Prisma.UserWhereInput = { deletedAt: null };
 			if (search) {
@@ -102,7 +128,11 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 				if (queryParam.filter["status"]) {
 					filterCondition = {
 						...filterCondition,
-						status: queryParam.filter["status"] as UserStatus,
+						status: {
+							in: DatatableToolkit.filterValues(
+								queryParam.filter["status"],
+							) as UserStatus[],
+						},
 					};
 				}
 
@@ -140,44 +170,25 @@ export function UserRepository(tx?: Prisma.TransactionClient) {
 					};
 				}
 
-				if (queryParam.filter["status"]) {
+				if (queryParam.filter["createdAt"]) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						queryParam.filter["createdAt"],
+						"createdAt",
+					);
 					filterCondition = {
 						...filterCondition,
-						status: queryParam.filter["status"] as UserStatus,
+						createdAt: { gte: from, lte: to },
 					};
 				}
 
-				if (
-					queryParam.filter["createdAt"] &&
-					typeof queryParam.filter["createdAt"] === "string"
-				) {
-					const [startDate, endDate] =
-						queryParam.filter["createdAt"].split(",");
+				if (queryParam.filter["updatedAt"]) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						queryParam.filter["updatedAt"],
+						"updatedAt",
+					);
 					filterCondition = {
 						...filterCondition,
-						createdAt: {
-							gte: DateToolkit.parse(startDate).toDate(),
-							...(endDate && {
-								lte: DateToolkit.parse(endDate).toDate(),
-							}),
-						},
-					};
-				}
-
-				if (
-					queryParam.filter["updatedAt"] &&
-					typeof queryParam.filter["updatedAt"] === "string"
-				) {
-					const [startDate, endDate] =
-						queryParam.filter["updatedAt"].split(",");
-					filterCondition = {
-						...filterCondition,
-						updatedAt: {
-							gte: DateToolkit.parse(startDate).toDate(),
-							...(endDate && {
-								lte: DateToolkit.parse(endDate).toDate(),
-							}),
-						},
+						updatedAt: { gte: from, lte: to },
 					};
 				}
 			}

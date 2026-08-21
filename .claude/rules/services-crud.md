@@ -36,7 +36,7 @@ async list(queryParam: DatatableType): Promise<PaginationResponse<RoleList>> {
 },
 ```
 
-The handler already ran `DatatableToolkit.parseFilter(query)` — do not re-parse.
+The handler already ran `DatatableToolkit.parseFilter(query, request.url)` — do not re-parse.
 
 ## detail
 

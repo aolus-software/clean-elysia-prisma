@@ -82,8 +82,8 @@ GET    /settings/select-option/permissions           PermissionGuard ["permissio
 GET    /settings/select-option/roles                 PermissionGuard ["role list"]
 ```
 
-That is **22 guarded routes** under `/settings`. All of them were added on 2026-08-20; before that
-every one of them was reachable by any authenticated user. See [rbac.md](./rbac.md).
+That is **22 guarded routes** under `/settings`. Every one needs its guard — an ungated route here is
+reachable by any authenticated user. See [rbac.md](./rbac.md).
 
 **Keep this map current.** Adding, renaming, or re-gating a route updates this table in the same
 change — that is [documentation.md](./documentation.md).

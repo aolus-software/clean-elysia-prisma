@@ -19,7 +19,12 @@ export const AuthMailService = {
 		const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 		const lang = getCurrentLocale();
 
-		await prisma.userEmailVerification.deleteMany({ where: { userId } });
+		// Revoke any outstanding token before issuing a new one. Stamped rather
+		// than deleted, so the audit trail survives — see prisma/schema.prisma.
+		await prisma.userEmailVerification.updateMany({
+			where: { userId, usedAt: null },
+			data: { usedAt: new Date() },
+		});
 		await prisma.userEmailVerification.create({
 			data: { userId, token, expiresAt },
 		});
@@ -48,7 +53,12 @@ export const AuthMailService = {
 		const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 		const lang = getCurrentLocale();
 
-		await prisma.passwordReset.deleteMany({ where: { userId } });
+		// Revoke any outstanding token before issuing a new one. Stamped rather
+		// than deleted, so the audit trail survives — see prisma/schema.prisma.
+		await prisma.passwordReset.updateMany({
+			where: { userId, usedAt: null },
+			data: { usedAt: new Date() },
+		});
 		await prisma.passwordReset.create({
 			data: { userId, token, expiresAt },
 		});

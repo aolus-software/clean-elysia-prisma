@@ -1,4 +1,9 @@
-import { DatatableQueryParams } from "@types";
+import {
+	roleFilterableFields,
+	roleFilterExample,
+	roleSortableFields,
+} from "@repositories";
+import { datatableQueryParams } from "@types";
 import { commonPaginatedResponse, commonResponse } from "@utils";
 import { t } from "elysia";
 
@@ -52,14 +57,22 @@ export const RoleDetailDataSchema = t.Object({
 // QUERY SCHEMAS
 // ============================================
 
-export { DatatableQueryParams as RoleQuerySchema };
+/* Documented against the repository's own allow-lists, so /docs shows exactly the
+   sort values and filter keys RoleRepository().findAll validates against. */
+export const RoleQuerySchema = datatableQueryParams({
+	sortFields: roleSortableFields,
+	filterFields: roleFilterableFields,
+	filterExample: roleFilterExample,
+});
 
 // ============================================
 // RESPONSE SCHEMAS
 // ============================================
 
-export const RoleListResponseSchema =
-	commonPaginatedResponse(RoleListDataSchema);
+export const RoleListResponseSchema = commonPaginatedResponse(
+	RoleListDataSchema,
+	{ include: [200, 400, 401, 403, 422, 500] },
+);
 
 export const RoleDetailResponseSchema = commonResponse(RoleDetailDataSchema, {
 	include: [200, 400, 401, 403, 404, 500],

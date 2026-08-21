@@ -73,7 +73,7 @@ Every relation currently reads `@relation(fields: [userId], references: [id])` w
 
 ## Soft delete
 
-`User` carries `deletedAt DateTime?` (added 2026-08-20, matching the three sibling repos). It is the
+`User` carries `deletedAt DateTime?`. It is the
 **only** soft-deletable model — `Role`, `Permission`, and the join tables are still hard-deleted.
 
 Two things follow, and both are load-bearing:
@@ -93,15 +93,36 @@ Adding soft delete to another model means adding the column **and** auditing eve
 same change. A `deletedAt` with unfiltered reads is worse than no soft delete at all, because the row
 looks gone in one place and is present in another.
 
-## Known schema gap — do not treat this as the template
+## Token tables — expiry, single use, and a unique token
 
-**Token tables have no `usedAt` and no unique index on `token`.** `UserEmailVerification` and
-`PasswordReset` both carry `expiresAt` (good — and the service does check it), but single-use is
-enforced by deleting the row after consumption. That works, and it loses the audit trail, and a
-failed delete leaves the token live.
+`UserEmailVerification` and `PasswordReset` are the template. Each carries `token` with `@unique`,
+`expiresAt`, and `usedAt`, plus `@@index([userId, usedAt])`:
 
-For a **new** token table: include `expiresAt`, a `@unique` on `token`, and prefer a `usedAt` stamp
-over deletion.
+```prisma
+token     String    @unique @db.VarChar(255)
+expiresAt DateTime
+usedAt    DateTime?
+// ...
+@@index([userId, usedAt], name: "idx_<table>_user_used")
+```
+
+**Single use is a stamp, not a delete.** `AuthService.verifyEmail` and `AuthService.resetPassword`
+each check `record.usedAt !== null` and reject a spent token with the same message a bad token gets,
+then `updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } })` inside the
+`$transaction` that performs the write they authorise. `AuthMailService` does the same on issuance, to
+revoke any outstanding token before minting a new one.
+
+Deleting the row instead also enforces single use, but it loses the audit trail and a failed delete
+leaves the token live. Two things follow from stamping, and both are load-bearing:
+
+- **A spent row still matches the token lookup.** `findFirst({ where: { token } })` returns it. The
+  `usedAt` check in the service is the *only* thing enforcing single use — omit it and the token is
+  permanently reusable.
+- **Both flows spend every outstanding token for that user, not just the one presented.** A password
+  that has just changed must invalidate the other links that could change it again.
+
+Neither table had *any* index on `token` before this change, so nothing at the database level was
+preventing a duplicate. A **new** token table gets all four columns and both indexes from the start.
 
 ## Enums are shared with TypeBox
 
@@ -155,4 +176,5 @@ Changing the catalogue means checking every `beforeHandle` in the same change.
 - Don't introduce `@map` / `@@map` on a single model.
 - Don't add a `deletedAt` to a model without auditing every read of that model in the same change.
   A soft-delete column with unfiltered reads is worse than none.
-- Don't add a token table without `expiresAt`.
+- Don't add a token table without `expiresAt`, `usedAt`, and `@unique` on `token`.
+- Don't enforce single use by deleting the row, and don't read a token without checking `usedAt`.

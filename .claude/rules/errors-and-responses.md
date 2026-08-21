@@ -38,14 +38,16 @@ and all exported from `src/libs/errors/index.ts`. The status is the one `ErrorHa
 | `BadRequestError`          | `bad-request-error.ts`          | 400    |
 | `UnauthorizedError`        | `unauthorized-error.ts`         | 401    |
 | `ForbiddenError`           | `forbidden-error.ts`            | 403    |
-All six classes now agree: `code`, `toResponse()`, and `ErrorHandlerPlugin` return the same
-status. `NotFoundError` used to declare 422 in both while the plugin mapped it to 404 — fixed
-2026-08-20.
+| `NotFoundError`            | `not-found-error.ts`            | 404    |
+| `UnprocessableEntityError` | `unprocessable-entity-error.ts` | 422    |
+| `RateLimitError`           | `to-many-request-error.ts`      | 429    |
+
+All six agree three ways: each class's `code`, its `toResponse()`, and the branch
+`ErrorHandlerPlugin` maps it to return the same status. Keep it that way — a class whose `code`
+disagrees with what the plugin sends misleads anyone reading `error.code`.
 
 `to-many-request-error.ts` is misspelled in the repo — that is the real path; don't rename it as a
-side effect of unrelated work. And `NotFoundError`'s own `code` field and `toResponse()` both say
-**422** while `ErrorHandlerPlugin` maps the class to **404**; the plugin is what runs in the request
-path, so callers get 404, but don't read `error.code` and expect it to agree.
+side effect of unrelated work.
 
 `BadRequestError` and `UnprocessableEntityError` take `(message, errors)` — the second argument is
 required, so pass `[{ field, message }]` even for a single field.

@@ -21,14 +21,14 @@ the five modules stay diffable against each other.
 
 ## List
 
-Parse the datatable query with `DatatableToolkit.parseFilter(query)`, then spread the repository's
+Parse the datatable query with `DatatableToolkit.parseFilter(query, request.url)`, then spread the repository's
 `{ data, meta }` across `ResponseToolkit.paginated`.
 
 ```ts
 .get(
 	"/",
-	async ({ query }) => {
-		const queryParam = DatatableToolkit.parseFilter(query);
+	async ({ query, request }) => {
+		const queryParam = DatatableToolkit.parseFilter(query, request.url);
 		const result = await RoleService.list(queryParam);
 		return ResponseToolkit.paginated(
 			result.data,
@@ -50,9 +50,17 @@ Parse the datatable query with `DatatableToolkit.parseFilter(query)`, then sprea
 )
 ```
 
-Each module declares its own `<Entity>QuerySchema` in `schema.ts` rather than sharing one type. The
-repository rejects an unknown sort key or filter with `BadRequestError`, so `400` belongs in the
-response schema's `include`.
+Each module declares its own `<Entity>QuerySchema` in `schema.ts`, built with
+`datatableQueryParams({ sortFields, filterFields })` from the repository's exported allow-lists —
+never a bare re-export of the shared `DatatableQueryParams`, which advertises nothing. See
+[validation.md](./validation.md).
+
+Two codes are always in the `include` for a list route:
+
+- `422` — `sort` and `sortDirection` are closed unions in that schema, so an unrecognised value is
+  rejected by validation before the handler runs.
+- `400` — filter keys arrive as separate flat query parameters (`filter[name]=x`) that the schema
+  cannot name, so the repository's allow-list check is what rejects an unknown one.
 
 ## Detail
 
@@ -169,7 +177,7 @@ Status codes to `include` when building them:
 
 | Route  | `include` |
 | ------ | --------- |
-| list   | `[200, 400, 401, 403, 500]` |
+| list   | `[200, 400, 401, 403, 422, 500]` |
 | create | `[201, 400, 401, 403, 500]` |
 | detail | `[200, 400, 401, 403, 404, 500]` |
 | update | `[200, 400, 401, 403, 404, 500]` |

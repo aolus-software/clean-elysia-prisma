@@ -81,8 +81,9 @@ services:
     # service hostnames that resolve inside the compose network (the .env
     # defaults point at localhost, which is the host, not this container).
     # Scaling: APP_CLUSTER_MODE=true runs one container across all cores.
-    # `--scale app=N` would need SO_REUSEPORT, which this repo does not
-    # implement yet — see docs/DEPLOYMENT.md.
+    # `--scale app=N` instead needs APP_REUSE_PORT=true, APP_CLUSTER_MODE=false,
+    # the `ports` mapping below removed, and a reverse proxy on this network —
+    # see docs/DEPLOYMENT.md. Pick one; never both flags at once.
     env_file:
       - .env
     environment:

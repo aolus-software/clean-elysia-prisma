@@ -4,12 +4,11 @@ Authentication and authorization are two separate steps. `AuthPlugin` proves **w
 guard in `beforeHandle` decides **what** they may do. A route that has the first and not the second is
 authenticated but unauthorized — every logged-in user can call it.
 
-This is not hypothetical in this repo. `PermissionGuard` and `RoleGuard` shipped here for a long time
-with **zero call sites**: every route under `src/modules/settings/` composed `.use(baseApp).use(AuthPlugin)`
-and nothing else, so any self-registered user could delete the superuser, grant themselves any role,
-or reset any account's password. All 22 settings routes were gated on 2026-08-20. Nothing prevents
-the next route from reintroducing the hole — there is no framework-level default that rejects an
-ungated route. That is what this rule is for.
+This is not hypothetical. A module that composes `.use(baseApp).use(AuthPlugin)` and declares routes
+with no `beforeHandle` lets any self-registered user delete the superuser, grant themselves any role,
+or reset any account's password. All 22 routes under `src/modules/settings/` are gated — but nothing
+prevents the next route from reintroducing the hole, because there is no framework-level default that
+rejects an ungated route. That is what this rule is for.
 
 ## The two guards
 
@@ -28,16 +27,14 @@ RoleGuard.canActivate(user, ["superuser"]);         // requires every listed rol
    ```ts
    .get(
    	"/",
-   	async ({ query }) => { /* ... */ },
+   	async ({ query, request }) => { /* ... */ },
    	{
    		beforeHandle: ({ user }) => {
    			PermissionGuard.canActivate(user, ["role list"]);
    		},
-   		query: DatatableQueryParams,
+   		query: RoleQuerySchema,
    		detail: { summary: "List roles", description: "... Requires 'role list' permission." },
-   		response: commonPaginatedResponse(RoleListSchema, {
-   			include: [200, 400, 401, 403, 500],
-   		}),
+   		response: RoleListResponseSchema,
    	},
    )
    ```

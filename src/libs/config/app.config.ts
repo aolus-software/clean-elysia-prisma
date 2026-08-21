@@ -7,9 +7,15 @@ interface IAppConfig {
 	APP_ENV: "development" | "staging" | "production";
 	APP_TIMEZONE: string;
 	APP_KEY: string;
-	APP_JWT_SECRET: string;
+
+	// api docs
+	ENABLE_API_DOCS: boolean;
+
 	APP_CLUSTER_MODE: boolean;
 	APP_CLUSTER_WORKERS: number;
+
+	// reuse-port
+	APP_REUSE_PORT: boolean;
 
 	// log
 	LOG_LEVEL: "info" | "warn" | "debug";
@@ -25,9 +31,13 @@ export const AppConfig: IAppConfig = {
 	APP_ENV: env.NODE_ENV,
 	APP_TIMEZONE: env.APP_TIMEZONE,
 	APP_KEY: env.APP_KEY,
-	APP_JWT_SECRET: env.APP_JWT_SECRET,
+
+	ENABLE_API_DOCS: env.ENABLE_API_DOCS,
+
 	APP_CLUSTER_MODE: env.APP_CLUSTER_MODE,
 	APP_CLUSTER_WORKERS: env.APP_CLUSTER_WORKERS,
+
+	APP_REUSE_PORT: env.APP_REUSE_PORT,
 
 	LOG_LEVEL: env.LOG_LEVEL,
 

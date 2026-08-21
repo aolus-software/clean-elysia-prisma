@@ -27,8 +27,8 @@ expanded before they land in the document.
 
 Use these exact bolded inline labels — not `###` sub-headings — so findings scan uniformly:
 
-*(The worked example below is a real finding from this repo, fixed on 2026-08-20. It is kept as
-the reference for what a finished finding looks like.)*
+*(The worked example below is a real finding from this repo, since fixed. It is kept as the
+reference for what a finished finding looks like.)*
 
 ```markdown
 ### §2.1 Any logged-in user can administer every other user — 🔴 bug — CONFIRMED
@@ -65,7 +65,7 @@ together, plus a decision on which routes are role-gated (`RoleGuard`) rather th
 permission-gated. Confirm the seeded catalogue covers every action first — the seed produces
 `list`/`create`/`detail`/`edit`/`delete` only, so "sync roles" and "reset password" have no
 permission of their own yet.
-See `.claude/rules/contradiction-halt.md` → "RBAC is defined but never enforced".
+See `.claude/rules/contradiction-halt.md` → the guard-coverage invariant.
 ```
 
 ### Block-by-block requirements

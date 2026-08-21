@@ -12,7 +12,7 @@ These apply to **every** change, regardless of which files it touches. Read them
 
 | Rule | Scope |
 | ---- | ----- |
-| [contradiction-halt.md](./contradiction-halt.md) | A request that contradicts a rule, the architecture, or a security invariant is reported and halted — never silently implemented or worked around. Lists the known issues already on record |
+| [contradiction-halt.md](./contradiction-halt.md) | A request that contradicts a rule, the architecture, or a security invariant is reported and halted — never silently implemented or worked around. Lists the invariants and known sharp edges |
 | [documentation.md](./documentation.md) | A doc your change makes wrong is fixed in the **same** change; lists every doc that must stay in sync |
 | [audit-findings.md](./audit-findings.md) | How an audit finding is written: five blocks, plain language, severity by consequence, CONFIRMED vs SUSPECT — the writing contract for [`/audit-flow`](../commands/audit-flow.md) |
 | [clean-code.md](./clean-code.md) | Formatting, explicit types, no `any`, no `console.*`, comment density |
@@ -31,7 +31,7 @@ Ordered outside-in, the way a request travels.
 | [services.md](./services.md) | `src/modules/<feature>/service.ts` — plain-object services, business-logic boundaries, transactions |
 | [services-crud.md](./services-crud.md) | `src/modules/<feature>/service.ts` — the canonical five-method CRUD service; the service owns the existence and uniqueness checks |
 | [repositories.md](./repositories.md) | `src/libs/database/postgres/repositories/` — Prisma factory pattern, `tx` on the factory, explicit `select`, sort/filter allow-lists |
-| [schema.md](./schema.md) | `prisma/schema.prisma` — model and field naming, composite join keys, migrations, and the three known schema gaps |
+| [schema.md](./schema.md) | `prisma/schema.prisma` — model and field naming, composite join keys, soft delete on `User`, the token-table contract, migrations |
 | [shared-code.md](./shared-code.md) | Anything reusable across modules **must** live in `libs/` |
 | [di.md](./di.md) | Dependency injection container and `DiPlugin` |
 | [plugins.md](./plugins.md) | `src/libs/plugins/` — plugin naming (`name`), `baseApp` composition order, what a plugin may not do |

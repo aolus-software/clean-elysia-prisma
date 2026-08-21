@@ -28,8 +28,8 @@ export const RolesModule = new Elysia({
 	.use(AuthPlugin)
 	.get(
 		"/",
-		async ({ query }) => {
-			const queryParam = DatatableToolkit.parseFilter(query);
+		async ({ query, request }) => {
+			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await RoleService.list(queryParam);
 			return ResponseToolkit.paginated(
 				result.data,
@@ -45,7 +45,11 @@ export const RolesModule = new Elysia({
 			response: RoleListResponseSchema,
 			detail: {
 				summary: "List roles",
-				description: "Retrieve a paginated list of roles",
+				description:
+					"Retrieve a paginated list of roles. `search` matches the role name. " +
+					"Sortable and filterable fields are listed on the individual query " +
+					"parameters; an unsupported `sort` is rejected with 422 and an " +
+					"unsupported `filter[<key>]` with 400.",
 			},
 		},
 	)

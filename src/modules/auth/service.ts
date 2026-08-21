@@ -96,9 +96,18 @@ export const AuthService = {
 			]);
 		}
 
+		// A spent token is indistinguishable from a bad one to the caller — the
+		// row survives consumption now, so this check is what enforces single use.
+		if (record.usedAt !== null) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "token", message: t("auth.invalidVerificationToken") },
+			]);
+		}
+
 		if (record.expiresAt < new Date()) {
-			await prisma.userEmailVerification.deleteMany({
-				where: { userId: record.userId },
+			await prisma.userEmailVerification.updateMany({
+				where: { userId: record.userId, usedAt: null },
+				data: { usedAt: new Date() },
 			});
 			throw new BadRequestError(t("auth.validationError"), [
 				{
@@ -113,8 +122,12 @@ export const AuthService = {
 				where: { id: record.userId },
 				data: { emailVerifiedAt: new Date() },
 			}),
-			prisma.userEmailVerification.deleteMany({
-				where: { userId: record.userId },
+			// Stamp rather than delete, so consumption is auditable. Every
+			// outstanding token for this user is spent, matching the previous
+			// delete-all-for-user behaviour.
+			prisma.userEmailVerification.updateMany({
+				where: { userId: record.userId, usedAt: null },
+				data: { usedAt: new Date() },
 			}),
 		]);
 	},
@@ -137,9 +150,18 @@ export const AuthService = {
 			]);
 		}
 
+		// A spent token is indistinguishable from a bad one to the caller — the
+		// row survives consumption now, so this check is what enforces single use.
+		if (record.usedAt !== null) {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "token", message: t("auth.invalidResetToken") },
+			]);
+		}
+
 		if (record.expiresAt < new Date()) {
-			await prisma.passwordReset.deleteMany({
-				where: { userId: record.userId },
+			await prisma.passwordReset.updateMany({
+				where: { userId: record.userId, usedAt: null },
+				data: { usedAt: new Date() },
 			});
 			throw new BadRequestError(t("auth.validationError"), [
 				{
@@ -155,7 +177,14 @@ export const AuthService = {
 				where: { id: record.userId },
 				data: { password: hashedPassword },
 			}),
-			prisma.passwordReset.deleteMany({ where: { userId: record.userId } }),
+			// Stamp rather than delete, so consumption is auditable. Every
+			// outstanding reset token for this user is spent — a password that has
+			// just changed must invalidate the other links that could change it
+			// again.
+			prisma.passwordReset.updateMany({
+				where: { userId: record.userId, usedAt: null },
+				data: { usedAt: new Date() },
+			}),
 		]);
 	},
 

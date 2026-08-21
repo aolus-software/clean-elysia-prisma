@@ -3,11 +3,35 @@ import { BadRequestError } from "@errors";
 import { Prisma } from "@prisma-generated";
 import {
 	DatatableType,
+	FilterField,
+	filterFieldNames,
 	PaginationResponse,
 	RoleDetail,
 	RoleList,
 } from "@types";
-import { DateToolkit } from "@utils";
+import { DatatableToolkit } from "@utils";
+
+/* The ?sort= and filter[...] values this repository accepts. Exported so the
+   module can document them in OpenAPI from one source of truth rather than
+   restating the list. An unrecognised value is rejected, not ignored.
+
+   `sortFields` must contain `defaultSort` — Elysia materialises the schema
+   default into the query object, so a default missing from this list rejects
+   every request that omits ?sort=. */
+export const roleSortableFields = ["id", "name", "createdAt", "updatedAt"];
+export const roleFilterableFields: FilterField[] = [
+	"name",
+	{ field: "createdAt", kind: "date" },
+	{ field: "updatedAt", kind: "date" },
+];
+
+/* Example value per non-enum filter key, rendered as the concrete sample in
+   /docs. */
+export const roleFilterExample: Record<string, string> = {
+	name: "admin",
+	createdAt: "2024-01-01,2024-12-31",
+	updatedAt: "2024-01-01,2024-12-31",
+};
 
 export function RoleRepository(tx?: Prisma.TransactionClient) {
 	const db = tx ?? prisma;
@@ -22,9 +46,9 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 			const finalLimit = Number(perPage);
 			const finalPage = Number(page);
 
-			const allowedSort = ["id", "name", "createdAt", "updatedAt"];
+			const allowedSort = roleSortableFields;
 			const sortDirectionAllowed = ["asc", "desc"];
-			const allowedFilter = ["id", "name", "createdAt", "updatedAt"];
+			const allowedFilter = filterFieldNames(roleFilterableFields);
 
 			let sort = queryParam.sort;
 			if (!sort) {
@@ -63,6 +87,11 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 				}
 			}
 
+			DatatableToolkit.assertFilterEnums(
+				queryParam.filter,
+				roleFilterableFields,
+			);
+
 			let whereCondition: Prisma.RoleWhereInput = {};
 			if (search) {
 				whereCondition = {
@@ -80,37 +109,25 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 					};
 				}
 
-				if (
-					queryParam.filter["createdAt"] &&
-					typeof queryParam.filter["createdAt"] === "string"
-				) {
-					const [startDate, endDate] =
-						queryParam.filter["createdAt"].split(",");
+				if (queryParam.filter["createdAt"]) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						queryParam.filter["createdAt"],
+						"createdAt",
+					);
 					filterCondition = {
 						...filterCondition,
-						createdAt: {
-							gte: DateToolkit.parse(startDate).toDate(),
-							...(endDate && {
-								lte: DateToolkit.parse(endDate).toDate(),
-							}),
-						},
+						createdAt: { gte: from, lte: to },
 					};
 				}
 
-				if (
-					queryParam.filter["updatedAt"] &&
-					typeof queryParam.filter["updatedAt"] === "string"
-				) {
-					const [startDate, endDate] =
-						queryParam.filter["updatedAt"].split(",");
+				if (queryParam.filter["updatedAt"]) {
+					const { from, to } = DatatableToolkit.filterDateRange(
+						queryParam.filter["updatedAt"],
+						"updatedAt",
+					);
 					filterCondition = {
 						...filterCondition,
-						updatedAt: {
-							gte: DateToolkit.parse(startDate).toDate(),
-							...(endDate && {
-								lte: DateToolkit.parse(endDate).toDate(),
-							}),
-						},
+						updatedAt: { gte: from, lte: to },
 					};
 				}
 			}

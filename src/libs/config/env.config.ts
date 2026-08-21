@@ -17,9 +17,20 @@ export const env = cleanEnv(process.env, {
 	}),
 	APP_TIMEZONE: str({ default: "UTC" }),
 	APP_KEY: str({ default: "your-app-key" }),
-	APP_JWT_SECRET: str({ default: "jwt-secret" }),
+
+	// API docs (Scalar UI at /docs). Defaults to false so an environment that
+	// never sets it cannot expose the schema — this is the only switch, and it
+	// is deliberately independent of NODE_ENV.
+	ENABLE_API_DOCS: bool({ default: false }),
+
 	APP_CLUSTER_MODE: bool({ default: false }),
 	APP_CLUSTER_WORKERS: num({ default: 0 }),
+
+	// Reuse-port (SO_REUSEPORT) — run N independent processes on the same
+	// port and let the kernel load-balance. Alternative to cluster mode;
+	// do not enable both at once. Scale by launching N processes (e.g. PM2).
+	APP_REUSE_PORT: bool({ default: false }),
+
 	LOG_LEVEL: str({
 		choices: ["info", "warn", "debug"] as const,
 		default: "info",
@@ -47,8 +58,11 @@ export const env = cleanEnv(process.env, {
 	MAIL_USER: str({ default: "your_email@example.com" }),
 	MAIL_PASS: str({ default: "your_email_password" }),
 
-	// JWT
-	JWT_SECRET: str({ default: "your-secret-key" }),
+	// JWT — this is the only secret that signs tokens (`jwt.config.ts` feeds it
+	// to AuthPlugin). Deliberately has NO default: a permissive fallback let an
+	// unconfigured process boot and sign tokens with a value published in this
+	// repo. Missing it now fails startup with an envalid error instead.
+	JWT_SECRET: str(),
 
 	// CORS
 	ALLOWED_HOST: str({ default: "" }),

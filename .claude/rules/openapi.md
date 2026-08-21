@@ -1,6 +1,8 @@
 # OpenAPI — Documentation
 
-OpenAPI is served by `DocsPlugin` (`src/libs/plugins/docs.plugin.ts`) at `/docs` using Scalar. It is **disabled in production** (`AppConfig.APP_ENV !== "production"`).
+OpenAPI is served by `DocsPlugin` (`src/libs/plugins/docs.plugin.ts`) at `/docs` using Scalar, gated on a single flag: `enabled: AppConfig.ENABLE_API_DOCS`, from the `ENABLE_API_DOCS` environment variable.
+
+That flag **defaults to `false`**, so an environment that never sets it cannot expose the schema, and it is deliberately **independent of `NODE_ENV`** — docs can be turned on for a staging box without pretending it is a development environment, and cannot be published by accident just by shipping with `NODE_ENV=staging`. An `APP_ENV !== "production"` check would publish the schema on every non-production deployment; don't reintroduce one alongside the flag. The flag is the whole switch.
 
 ## Rules
 
@@ -33,7 +35,7 @@ OpenAPI is served by `DocsPlugin` (`src/libs/plugins/docs.plugin.ts`) at `/docs`
    ```
 7. **Do not commit secrets, real user data, or staging URLs into examples.**
 8. **Version & metadata changes go in `docs.plugin.ts`**, not in individual modules. Bump `version` there when shipping a breaking API change.
-9. **Production stays dark.** Never flip `enabled` to `true` unconditionally — guard it on env.
+9. **Never flip `enabled` to `true` unconditionally**, and never add an `APP_ENV` / `NODE_ENV` term next to it. `ENABLE_API_DOCS` is the only switch; an environment that wants docs sets it.
 
 ## Reviewing a new route
 

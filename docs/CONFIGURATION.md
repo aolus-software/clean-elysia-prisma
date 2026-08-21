@@ -20,17 +20,17 @@ Base environment variable validation using envalid.
 
 Core application settings.
 
-| Variable         | Type     | Default         | Description                                    |
-| ---------------- | -------- | --------------- | ---------------------------------------------- |
-| `APP_NAME`       | `string` | `"Elysia APP"`  | Application name                               |
-| `APP_PORT`       | `number` | `3000`          | HTTP server port                               |
-| `APP_URL`        | `string` | Required        | Public application URL                         |
-| `NODE_ENV`       | `string` | `"development"` | Environment (development, staging, production) |
-| `APP_TIMEZONE`   | `string` | `"UTC"`         | Application timezone (IANA format)             |
-| `APP_KEY`        | `string` | Required        | Application secret key                         |
-| `APP_JWT_SECRET` | `string` | Required        | JWT signing secret                             |
-| `LOG_LEVEL`      | `string` | `"info"`        | Logging level (info, warn, debug, error)       |
-| `CLIENT_URL`     | `string` | Required        | Frontend/client application URL                |
+| Variable          | Type      | Default         | Description                                                |
+| ----------------- | --------- | --------------- | ---------------------------------------------------------- |
+| `APP_NAME`        | `string`  | `"Elysia APP"`  | Application name                                           |
+| `APP_PORT`        | `number`  | `3000`          | HTTP server port                                           |
+| `APP_URL`         | `string`  | Required        | Public application URL                                     |
+| `NODE_ENV`        | `string`  | `"development"` | Environment (development, staging, production)             |
+| `APP_TIMEZONE`    | `string`  | `"UTC"`         | Application timezone (IANA format)                         |
+| `APP_KEY`         | `string`  | Required        | Application secret key                                     |
+| `ENABLE_API_DOCS` | `boolean` | `false`         | Serves the Scalar UI at `/docs`. Independent of `NODE_ENV` |
+| `LOG_LEVEL`       | `string`  | `"info"`        | Logging level (info, warn, debug, error)                   |
+| `CLIENT_URL`      | `string`  | Required        | Frontend/client application URL                            |
 
 **Example `.env`**:
 
@@ -41,7 +41,8 @@ APP_PORT=3000
 APP_URL="http://localhost:3000"
 APP_TIMEZONE="UTC"
 APP_KEY="your-app-key"
-APP_JWT_SECRET="your-jwt-secret"
+JWT_SECRET="change-me-before-running"
+ENABLE_API_DOCS=true
 LOG_LEVEL="info"
 CLIENT_URL="http://localhost:3000"
 ```
@@ -149,9 +150,9 @@ ALLOWED_HOST="http://localhost:3000,https://yourdomain.com"
 
 JWT authentication configuration.
 
-| Variable         | Type     | Description        |
-| ---------------- | -------- | ------------------ |
-| `APP_JWT_SECRET` | `string` | JWT signing secret |
+| Variable     | Type     | Default            | Description                                            |
+| ------------ | -------- | ------------------ | ------------------------------------------------------ |
+| `JWT_SECRET` | `string` | **None. Required** | Signs and verifies every token. Startup fails if unset |
 
 ## Usage Examples
 
@@ -257,31 +258,34 @@ here so an `.env` can be carried across without silently losing a setting.
 | Redis extra      | `REDIS_DB`               | `REDIS_TTL`                                                                       |
 | JWT              | `JWT_SECRET` only        | `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`    |
 
-**Elysia-only** (no NestJS equivalent): `APP_CLUSTER_MODE`, `APP_CLUSTER_WORKERS`, `LOG_LEVEL`,
-`CLICKHOUSE_HOST`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`. `APP_REUSE_PORT`
-exists in `clean-elysia` alone.
+**Elysia-only** (no NestJS equivalent): `APP_CLUSTER_MODE`, `APP_CLUSTER_WORKERS`, `APP_REUSE_PORT`,
+`LOG_LEVEL`, `CLICKHOUSE_HOST`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`.
 
-**NestJS-only**: `API_DOCS_ENABLED`, `THROTTLER_TTL`, `THROTTLER_LIMIT`, `APP_VERSION`. Two are worth
-knowing about when porting _from_ Nest:
+**NestJS-only**: `THROTTLER_TTL`, `THROTTLER_LIMIT`, `APP_VERSION`. One is worth knowing about when
+porting _from_ Nest:
 
-- `API_DOCS_ENABLED` gates the docs UI on an explicit flag that defaults to `false`. The Elysia
-  family instead gates `/docs` on `AppConfig.APP_ENV !== "production"` — an implicit rule that
-  publishes the schema on any non-production deployment.
 - `THROTTLER_TTL` / `THROTTLER_LIMIT` drive the Nest throttler from the environment. The Elysia rate
   limit is **hardcoded** in `src/libs/plugins/security.plugin.ts` (100 requests / 60s); there is no
   environment variable to set.
 
-### Warning: `APP_JWT_SECRET` does not sign your tokens
+### `JWT_SECRET` is required, and `APP_JWT_SECRET` is gone
 
-Both Elysia repos declare **two** JWT-looking variables, and only one of them does anything:
+Both Elysia repos used to declare **two** JWT-looking variables, and only one of them did anything:
+`JWT_SECRET` reached `AuthPlugin` through `jwt.config.ts`, while `APP_JWT_SECRET` was surfaced on
+`AppConfig` and read by nothing. Because both carried permissive defaults, an operator who set
+`APP_JWT_SECRET` believing it secured JWTs left every token signed with the built-in
+`"your-secret-key"` — and the app booted without complaint.
 
-| Variable         | Read by                                                              | Effect                                                  |
-| ---------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| `JWT_SECRET`     | `src/libs/config/jwt.config.ts` → `JWT_CONFIG.secret` → `AuthPlugin` | **This signs and verifies every token.**                |
-| `APP_JWT_SECRET` | `src/libs/config/app.config.ts` only                                 | Surfaced on `AppConfig` and read by nothing else. Dead. |
+Resolved 2026-08-21 in both repos:
 
-Both have permissive defaults, so setting only `APP_JWT_SECRET` leaves tokens signed with the
-built-in default and the application starts without complaint. **Set `JWT_SECRET`.**
+- **`APP_JWT_SECRET` was removed** from `env.config.ts`, `app.config.ts`, and `.env.example`. It is
+  no longer a valid variable; setting it does nothing and envalid ignores it.
+- **`JWT_SECRET` lost its default.** It is declared `str()` with no fallback, so a process without
+  it fails at startup with an envalid error rather than signing tokens with a published value.
+
+This is a breaking change for any environment that was booting without `JWT_SECRET` set. Generate
+one with `openssl rand -base64 48`. Note that every entry point that imports `@config` is affected,
+including the Prisma seed and the `i18n:keys` script — they all validate the same environment.
 
 ## Further Reading
 

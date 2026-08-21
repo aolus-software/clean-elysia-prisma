@@ -26,8 +26,8 @@ export const PermissionsModule = new Elysia({
 	.use(AuthPlugin)
 	.get(
 		"/",
-		async ({ query }) => {
-			const queryParam = DatatableToolkit.parseFilter(query);
+		async ({ query, request }) => {
+			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await PermissionService.list(queryParam);
 			return ResponseToolkit.paginated(
 				result.data,
@@ -43,7 +43,11 @@ export const PermissionsModule = new Elysia({
 			response: PermissionListResponseSchema,
 			detail: {
 				summary: "List permissions",
-				description: "Retrieve a paginated list of permissions",
+				description:
+					"Retrieve a paginated list of permissions. `search` matches the " +
+					"permission name and group. Sortable and filterable fields are listed " +
+					"on the individual query parameters; an unsupported `sort` is rejected " +
+					"with 422 and an unsupported `filter[<key>]` with 400.",
 			},
 		},
 	)

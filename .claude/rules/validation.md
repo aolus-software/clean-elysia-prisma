@@ -7,6 +7,31 @@ All HTTP I/O is validated via Elysia's TypeBox (`t`). Schemas live next to the r
 - Per-module: `src/modules/<feature>/schema.ts`
 - Cross-module response envelopes: `commonResponse(...)` from `@utils`
 
+## List query schemas come from `datatableQueryParams`
+
+A list route's `query` schema is built once per module in that module's `schema.ts`, from the shared builder in `@types`, passing the repository's **exported** allow-lists:
+
+```ts
+import { roleFilterableFields, roleSortableFields } from "@repositories";
+import { datatableQueryParams } from "@types";
+
+export const RoleQuerySchema = datatableQueryParams({
+	sortFields: roleSortableFields,
+	filterFields: roleFilterableFields,
+});
+```
+
+What that buys, and why the exports rather than a restated list:
+
+- `sort` becomes a **closed union of the allowed values**, so `/docs` renders a dropdown carrying `defaultSort` as its default, and an unrecognised value is a 422 from validation.
+- The `filter` object gets **one typed property per allowed key** — an enum key renders as a dropdown of its values, every other key shows the sample from `<entity>FilterExample`. This is what replaces the single opaque description blob.
+- **That filter object is documentation, not validation.** Elysia strips `filter[<key>]` query parameters before the schema runs, so nothing there ever receives a value; the repository enforces both the key set and the enum ranges, and returns **400**. See [repositories.md](./repositories.md).
+- Nothing can drift. The documented list and the enforced list are the same array.
+
+Passing a hand-written array here, or re-exporting the bare `DatatableQueryParams`, defeats all three. `DatatableQueryParams` exists only for a list route with no entity-specific allow-list to advertise, and there are none in this repo.
+
+`sortDirection`, `page`, and `perPage` are already described and defaulted by the builder — do not redeclare them per module. Note the defaults are **materialised into the query object** by Elysia, so they are the values the repository actually receives; a default the repository would reject is a live 400, not a cosmetic mismatch.
+
 ## Rules
 
 1. **One `schema.ts` per module / sub-module.** Group schemas with banner comments — Body, Query, Data, Response. See `src/modules/auth/schema.ts` for the canonical layout.

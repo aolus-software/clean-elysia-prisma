@@ -45,55 +45,42 @@ This applies whether the contradiction is with:
 - It does not license scope creep in the other direction either: noticing an unrelated defect means
   *reporting* it, not fixing it inside the current change.
 
-## Known contradictions already on record
+## Invariants and known sharp edges
 
-These are verified facts about this repository as it stands, not aspirations. Do not build on any of
-them, and do not "fix" one as a side effect of unrelated work — raise it first.
+Verified facts about this repository as it stands. Each one is either an invariant a change can
+silently break, or a trap that fails quietly. Do not build on any of them, and do not "fix" one as a
+side effect of unrelated work — raise it first.
 
-- **~~RBAC is defined but never enforced.~~ ✅ RESOLVED 2026-08-20.** Every one of the 22 routes under
-  `src/modules/settings/` now carries a `beforeHandle` calling `PermissionGuard.canActivate` (or
-  `RoleGuard.canActivate` for the three privilege-granting routes). Kept on record because the
-  *shape* of the mistake matters: `AuthPlugin` establishes identity only, and a route that composes
-  `.use(AuthPlugin)` without a `beforeHandle` is unauthorized-by-default rather than
-  denied-by-default. **Any new route must add its own guard** — nothing enforces this automatically.
-  The three sensitive routes (`users/:id/sync-roles`, `users/:id/reset-password`,
-  `roles/:id/sync-permissions`) are gated by `RoleGuard(["superuser"])` rather than a permission,
-  matching how both sibling templates treat password reset.
+- **A route behind `AuthPlugin` with no `beforeHandle` is unauthorized-by-default, not
+  denied-by-default.** `AuthPlugin` establishes *identity* only. All 22 routes under
+  `src/modules/settings/` carry a `beforeHandle` calling `PermissionGuard.canActivate` — or
+  `RoleGuard.canActivate(["superuser"])` for the three privilege-granting ones
+  (`users/:id/sync-roles`, `users/:id/reset-password`, `roles/:id/sync-permissions`). **Any new route
+  must add its own guard**; nothing enforces this automatically, and a missing one is silent.
 - **Seeded permission names are space-separated, not `entity:action`.**
   `prisma/seed/permission.seed.ts` generates `` `${group} ${permission}` `` over
   groups `user`, `role`, `permission` and actions `list`, `create`, `detail`, `edit`, `delete` —
   i.e. `"user list"`, `"role create"`, `"permission delete"`. `UserRepository().userInformation()`
-  flattens those same `Permission.name` strings into `UserInformation.permissions`, so a guard call
-  would have to be written `PermissionGuard.canActivate(user, ["user create"])`. Do not introduce
-  colon-form strings without deciding (and migrating) the whole catalog.
-- **~~There is no soft delete anywhere.~~ ✅ RESOLVED 2026-08-20.** `User` now carries `deletedAt`
-  and `UserService.delete` stamps it instead of issuing a `DELETE`; all four read paths in
-  `user.repository.ts` filter `deletedAt: null`. Kept on record because the *shape* matters: soft
-  delete is only as good as its least-filtered read, and the one that matters most is
-  `userInformation()`, which `AuthPlugin` resolves the caller's roles and permissions through — an
-  unfiltered read there would leave a deleted user fully authenticated. `Role`, `Permission`, and the
-  join tables are **still hard-deleted**; do not assume otherwise. Note `User.email` deliberately lost
-  its `@unique` so a deleted user's address is reusable — uniqueness among live users is a service
-  check only.
-
-- **~~`UserStatus` is missing a `SUSPENDED` value.~~ ✅ RESOLVED 2026-08-20.** The enum now carries
-  four members, matching the sibling templates.
-
+  flattens those same `Permission.name` strings into `UserInformation.permissions`, so a guard call is
+  written `PermissionGuard.canActivate(user, ["user create"])`. Do not introduce colon-form strings
+  without deciding (and migrating) the whole catalog.
+- **Soft delete is only as good as its least-filtered read.** `User` carries `deletedAt` and
+  `UserService.delete` stamps it instead of issuing a `DELETE`; all four read paths in
+  `user.repository.ts` filter `deletedAt: null`. The one that matters most is `userInformation()`,
+  which `AuthPlugin` resolves the caller's roles and permissions through — an unfiltered read there
+  would leave a deleted user fully authenticated. `Role`, `Permission`, and the join tables are
+  **hard-deleted**; do not assume otherwise. `User.email` deliberately has no `@unique` so a deleted
+  user's address is reusable — uniqueness among live users is a service check only.
 - **There are no tests and no test runner.** `package.json` defines
   `"test": "echo \"Error: no test specified\" && exit 1"`, and the repo contains zero `*.test.ts` /
   `*.spec.ts` files. None of the invariants in these rules has a regression test. Never report test
   results without first setting a runner up and saying that you did.
-- **~~There is no deployment configuration.~~ ✅ RESOLVED 2026-08-20.** The `Makefile` now carries the
-  nine `docker-*` targets and an `ecosystem.config.cjs` exists; `docs/DEPLOYMENT.md` documents both
-  paths. Two things to know before using them:
-  - **PM2 runs `instances: 1`, not `"max"`.** The sibling `clean-elysia` scales by SO_REUSEPORT, but
-    this repo has no `APP_REUSE_PORT` — `src/server.ts` calls `.listen(AppConfig.APP_PORT)` plainly,
-    so a second instance would fail to bind. The ecosystem file documents the three-file change needed
-    to enable it. `APP_CLUSTER_MODE=false` is set in both env blocks so the in-process clustering in
-    `src/index.ts` does not fight PM2 for the socket.
-  - **The Docker image could not previously have run.** Fixed alongside: the `app` service in
-    `docker-compose.yml` was entirely commented out, and the `Dockerfile` ran `bun install
-    --production` (which drops `prisma`, a devDependency, so neither the CLI nor a generated client
-    existed in the image) with no `prisma generate` step. A `.dockerignore` was added too, since
-    `COPY . .` was copying host `node_modules` and `prisma/generated` — macOS/arm Prisma engines —
-    into an Alpine image.
+- **Cluster mode and reuse-port both bind `APP_PORT` — never enable both.** `ecosystem.config.cjs`
+  runs `instances: "max"` on SO_REUSEPORT: `APP_REUSE_PORT` is validated in `env.config.ts`, surfaced
+  on `AppConfig`, and turns the `.listen()` call in `src/server.ts` into `{ port, reusePort: true }`.
+  Both env blocks set it, and both set `APP_CLUSTER_MODE=false` so the in-process clustering in
+  `src/index.ts` does not fight PM2 for the socket. Enabling both is the failure mode to watch for.
+- **The Docker image needs the full dependency set.** `prisma` is a devDependency, so
+  `bun install --production` would leave the image with neither the CLI nor a generated client, and
+  `prisma generate` must run at build time. `.dockerignore` matters too — without it `COPY . .` drags
+  host `node_modules` and `prisma/generated` (macOS/arm engines) into an Alpine image.

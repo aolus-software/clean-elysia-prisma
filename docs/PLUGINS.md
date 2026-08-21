@@ -187,14 +187,18 @@ export const baseApp = new Elysia({ name: "base-app" })
 
 ### Conditional Registration
 
+`DocsPlugin` is always registered — it gates itself internally on
+`enabled: AppConfig.ENABLE_API_DOCS`, so there is no `if` at the composition site. When a plugin of
+your own needs the same treatment, read the flag inside it rather than branching on the environment
+at registration:
+
 ```typescript
 import { AppConfig } from "@config";
 
-const app = new Elysia();
-
-if (AppConfig.APP_ENV !== "production") {
-	app.use(DocsPlugin);
-}
+// Inside the plugin, not at the call site — one switch, one place.
+export const SomePlugin = new Elysia({ name: "some" }).use(
+	something({ enabled: AppConfig.ENABLE_API_DOCS }),
+);
 ```
 
 ## Plugin Lifecycle Hooks

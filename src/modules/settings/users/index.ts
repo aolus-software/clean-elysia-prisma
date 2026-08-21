@@ -30,8 +30,8 @@ export const UsersModule = new Elysia({
 	.use(AuthPlugin)
 	.get(
 		"/",
-		async ({ query }) => {
-			const queryParam = DatatableToolkit.parseFilter(query);
+		async ({ query, request }) => {
+			const queryParam = DatatableToolkit.parseFilter(query, request.url);
 			const result = await UserService.list(queryParam);
 			return ResponseToolkit.paginated(
 				result.data,
@@ -47,7 +47,13 @@ export const UsersModule = new Elysia({
 			response: UserListResponseSchema,
 			detail: {
 				summary: "List users",
-				description: "Retrieve a paginated list of users",
+				description:
+					"Retrieve a paginated list of users. Soft-deleted users are excluded. " +
+					"`search` matches name and email. Sortable and filterable fields are " +
+					"listed on the individual query parameters; `filter[roles]` takes a " +
+					"comma-separated list of role names, and `filter[createdAt]` / " +
+					"`filter[updatedAt]` take a comma-separated date range. An unsupported " +
+					"`sort` is rejected with 422 and an unsupported `filter[<key>]` with 400.",
 			},
 		},
 	)

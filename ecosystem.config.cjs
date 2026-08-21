@@ -1,25 +1,23 @@
 /**
  * PM2 ecosystem — Bun + Elysia (Prisma).
  *
- * Scaling model: PM2 supervises fork-mode Bun processes. We deliberately do
- * NOT use PM2's `cluster` exec_mode — it relies on Node's `cluster` module,
- * which is only partially supported under Bun.
+ * Scaling model: SO_REUSEPORT. PM2 runs N independent *fork-mode* Bun
+ * processes; each binds the same port with `reusePort: true` and the kernel
+ * load-balances connections across them. We deliberately do NOT use PM2's
+ * `cluster` exec_mode — it relies on Node's `cluster` module, which is only
+ * partially supported under Bun.
  *
- * IMPORTANT — SO_REUSEPORT is NOT wired up in this repo. Unlike the Drizzle
- * sibling, `src/server.ts` here calls `.listen(AppConfig.APP_PORT)` with no
- * `reusePort` option, and there is no `APP_REUSE_PORT` variable in
- * `src/libs/config/env.config.ts`. Several instances bound to one port would
- * therefore fail with EADDRINUSE — so `instances` stays at 1.
+ * Reuse-port is wired through three places, all mirroring the Drizzle sibling:
+ * `APP_REUSE_PORT` is validated in `src/libs/config/env.config.ts`, surfaced on
+ * `AppConfig` in `app.config.ts`, and turned into `{ port, reusePort: true }`
+ * at the `.listen()` call in `src/server.ts`. Both env blocks below set it, so
+ * the instances PM2 launches can share the port instead of failing with
+ * EADDRINUSE.
  *
- * To scale across cores, pick exactly ONE of:
- *   1. Wire up reuse-port: validate `APP_REUSE_PORT` in
- *      `src/libs/config/env.config.ts`, surface it in `app.config.ts`, pass
- *      `reusePort: true` to `.listen()` in `src/server.ts`. Then set
- *      `instances` below to `Number(process.env.PM2_INSTANCES) || "max"` and
- *      add `APP_REUSE_PORT: "true"` to both env blocks.
- *   2. Use the app's own in-process clustering: set `APP_CLUSTER_MODE: "true"`
- *      (plus `APP_CLUSTER_WORKERS`, 0 = every core) and keep `instances: 1`,
- *      so PM2 supervises the cluster primary and the primary owns the forks.
+ * The alternative is the app's own in-process clustering: set
+ * `APP_CLUSTER_MODE: "true"` (plus `APP_CLUSTER_WORKERS`, 0 = every core),
+ * drop `APP_REUSE_PORT`, and pin `instances: 1` so PM2 supervises the cluster
+ * primary and the primary owns the forks. Pick exactly one of the two.
  *
  * `APP_CLUSTER_MODE=false` is set in both env blocks on purpose: the entry
  * point (`src/index.ts`) forks its own node-cluster workers when that flag is
@@ -38,8 +36,7 @@
  *   pm2 logs clean-elysia-prisma
  *   pm2 delete clean-elysia-prisma
  *
- * Override the process count without editing this file (only meaningful once
- * reuse-port is wired up — see above):
+ * Override the process count without editing this file:
  *   PM2_INSTANCES=2 pm2 start ecosystem.config.cjs --env production
  */
 module.exports = {
@@ -51,10 +48,10 @@ module.exports = {
 			interpreter: "bun",
 			interpreter_args: "run",
 
-			// Fork mode => N independent Bun processes. Leave at 1 until
-			// SO_REUSEPORT is wired up, or every extra process fails to bind.
+			// Fork mode + N instances => N independent Bun processes, each
+			// binding APP_PORT with SO_REUSEPORT.
 			exec_mode: "fork",
-			instances: Number(process.env.PM2_INSTANCES) || 1,
+			instances: Number(process.env.PM2_INSTANCES) || "max",
 
 			autorestart: true,
 			max_restarts: 10,
@@ -64,10 +61,12 @@ module.exports = {
 
 			env: {
 				NODE_ENV: "development",
+				APP_REUSE_PORT: "true",
 				APP_CLUSTER_MODE: "false",
 			},
 			env_production: {
 				NODE_ENV: "production",
+				APP_REUSE_PORT: "true",
 				APP_CLUSTER_MODE: "false",
 			},
 		},
