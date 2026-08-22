@@ -68,7 +68,7 @@ across without checking which side you are on:
 | | `clean-elysia-prisma` | `clean-elysia` |
 | --- | --- | --- |
 | Transaction handle | passed to the **factory** — `UserRepository(tx)` | passed to each **method** — `UserRepository().find(x, tx)` |
-| CRUD checks | in the **service** (fetch, check, throw) | in the **repository** |
+| CRUD checks | in the **service** (fetch, check, throw) | *(same — the service, since the placement was settled)* |
 | Response schemas | named envelopes built in `schema.ts` | `commonResponse(...)` inline at the route |
 | OpenAPI tags | `Settings - Users` | `Settings/Users` |
 | Soft delete | `deletedAt` on `User` only | `deleted_at` on soft-deletable tables |
