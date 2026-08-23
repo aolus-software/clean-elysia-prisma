@@ -100,22 +100,33 @@ A comma means different things depending on the key, so each key declares its `k
 
 ```ts
 export const userFilterableFields: FilterField[] = [
-	{ field: "status", enum: Object.values(UserStatus) },
 	"name",
-	{ field: "role_id", kind: "id" },
+	"email",
+	{ field: "status", enum: Object.values(UserStatus) },
+	{ field: "roles", kind: "list" },
 	{ field: "createdAt", kind: "date" },
+	{ field: "updatedAt", kind: "date" },
 ];
 ```
 
-**Every id-ish key is `kind: "id"` and splits.** Assigning a raw value to a scalar is wrong even when
-a single id is the common case — it silently makes multi-value input match nothing:
+That is the **real** list from `user.repository.ts` — this repo narrows by role **name** under the key
+`roles`, not by id. The sibling `clean-elysia` filters by id under `roleId` with `kind: "id"`. Do not
+port either list across; each repository's exported array is the only thing that decides what its
+endpoint accepts, and passing a key the array does not name is a 400.
+
+**A multi-value key splits — never compare the raw string.** Assigning it to a scalar is wrong even
+when a single value is the common case, because it silently makes multi-value input match nothing:
 
 ```ts
-// WRONG — one id only, and a comma-separated value matches no row at all
-eq(userRoles.role_id, filter.role_id as string)
+// WRONG — a comma-separated value matches no row at all
+where: { roles: { some: { role: { name: filter.roles as string } } } }
 
 // RIGHT
-inArray(userRoles.role_id, DatatableToolkit.filterValues(filter.role_id))
+where: {
+	roles: {
+		some: { role: { name: { in: DatatableToolkit.filterValues(filter.roles) } } },
+	},
+}
 ```
 
 **Date keys go through `DatatableToolkit.filterDateRange(value, key)`**, which returns an inclusive
