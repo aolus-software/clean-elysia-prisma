@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@errors";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { RoleRepository } from "@repositories";
 import {
@@ -24,7 +24,7 @@ export const RoleService = {
 	async create(name: string): Promise<{ id: string; name: string }> {
 		const existing = await RoleRepository().findByName(name);
 		if (existing) {
-			throw new BadRequestError(t("role.alreadyExists"), [
+			throw new UnprocessableEntityError(t("role.alreadyExists"), [
 				{ field: "name", message: t("role.nameExists") },
 			]);
 		}
@@ -42,7 +42,7 @@ export const RoleService = {
 
 		const existing = await RoleRepository().findByName(name);
 		if (existing && existing.id !== id) {
-			throw new BadRequestError(t("role.alreadyExists"), [
+			throw new UnprocessableEntityError(t("role.alreadyExists"), [
 				{ field: "name", message: t("role.nameExists") },
 			]);
 		}

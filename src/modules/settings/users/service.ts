@@ -1,5 +1,9 @@
 import { prisma } from "@database";
-import { BadRequestError, NotFoundError } from "@errors";
+import {
+	BadRequestError,
+	NotFoundError,
+	UnprocessableEntityError,
+} from "@errors";
 import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserStatus } from "@prisma-generated";
@@ -30,11 +34,11 @@ export const UserService = {
 		email: string;
 		password: string;
 		status?: UserStatus;
-		role_ids?: string[];
+		roleIds?: string[];
 	}): Promise<UserDetail> {
 		const existing = await UserRepository().findByMail(data.email);
 		if (existing) {
-			throw new BadRequestError(t("user.emailInUse"), [
+			throw new UnprocessableEntityError(t("user.emailInUse"), [
 				{ field: "email", message: t("user.emailExists") },
 			]);
 		}
@@ -52,9 +56,9 @@ export const UserService = {
 			select: { id: true },
 		});
 
-		if (data.role_ids && data.role_ids.length > 0) {
+		if (data.roleIds && data.roleIds.length > 0) {
 			await prisma.userRole.createMany({
-				data: data.role_ids.map((roleId) => ({
+				data: data.roleIds.map((roleId) => ({
 					userId: user.id,
 					roleId,
 				})),
@@ -86,7 +90,7 @@ export const UserService = {
 		if (data.email) {
 			const existing = await UserRepository().findByMail(data.email);
 			if (existing && existing.id !== id) {
-				throw new BadRequestError(t("user.emailInUse"), [
+				throw new UnprocessableEntityError(t("user.emailInUse"), [
 					{
 						field: "email",
 						message: t("user.emailExists"),

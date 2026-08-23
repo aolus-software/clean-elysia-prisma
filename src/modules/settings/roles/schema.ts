@@ -20,7 +20,7 @@ export const UpdateRoleSchema = t.Object({
 });
 
 export const SyncRolePermissionsSchema = t.Object({
-	permission_ids: t.Array(t.String(), { minItems: 0 }),
+	permissionIds: t.Array(t.String(), { minItems: 0 }),
 });
 
 // ============================================
@@ -79,11 +79,11 @@ export const RoleDetailResponseSchema = commonResponse(RoleDetailDataSchema, {
 });
 
 export const RoleCreateResponseSchema = commonResponse(RoleListDataSchema, {
-	include: [201, 400, 401, 403, 409, 422, 500],
+	include: [201, 400, 401, 403, 422, 500],
 });
 
 export const RoleUpdateResponseSchema = commonResponse(RoleListDataSchema, {
-	include: [200, 400, 401, 403, 404, 409, 422, 500],
+	include: [200, 400, 401, 403, 404, 422, 500],
 });
 
 export const RoleDeleteResponseSchema = commonResponse(t.Null(), {

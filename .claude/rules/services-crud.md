@@ -20,7 +20,7 @@ This is the load-bearing rule of the layer. The repository queries; the **servic
 check, then act:
 
 - existence → `NotFoundError`
-- uniqueness → `BadRequestError` with a field array
+- uniqueness → `UnprocessableEntityError` with a field array
 - anything else needing DB state → the service
 
 The repository only validates the datatable inputs (sort field, sort direction, filter keys) and
@@ -62,7 +62,7 @@ Check uniqueness first, then write. The field array is what lets the client rend
 async create(name: string): Promise<{ id: string; name: string }> {
 	const existing = await RoleRepository().findByName(name);
 	if (existing) {
-		throw new BadRequestError("Role already exists", [
+		throw new UnprocessableEntityError("Role already exists", [
 			{ field: "name", message: "Role with this name already exists" },
 		]);
 	}
@@ -70,9 +70,18 @@ async create(name: string): Promise<{ id: string; name: string }> {
 },
 ```
 
-Hash passwords and compute derived fields here, never in the repository or the handler. Uniqueness
-failures use `BadRequestError` with field details in this repo — not `UnprocessableEntityError`, and
-not a 409. Stay consistent with that.
+Hash passwords and compute derived fields here, never in the repository or the handler.
+
+**A uniqueness failure is `UnprocessableEntityError` (422) — settled 2026-08-23**, in this repo and in
+the sibling `clean-elysia`, with field details attached so the client can render the error inline. The
+request is well-formed and fails a business rule, which is what 422 means. All three modules here
+previously threw `BadRequestError` (400); that is gone, and so is the **409** the response schemas
+used to advertise — no error class in this repo can produce one.
+
+`BadRequestError` (400) is still correct for a malformed request the schema could not reject, for the
+repository's datatable guards (unknown sort field, unknown filter key), and for the "insert returned
+nothing" assertions in `users/service.ts`. Those are bad *input* or a failed write, not a failed
+business rule.
 
 ## update
 
@@ -87,7 +96,7 @@ async update(id: string, name: string): Promise<{ id: string; name: string }> {
 
 	const existing = await RoleRepository().findByName(name);
 	if (existing && existing.id !== id) {
-		throw new BadRequestError("Role already exists", [
+		throw new UnprocessableEntityError("Role already exists", [
 			{ field: "name", message: "Role with this name already exists" },
 		]);
 	}
@@ -168,7 +177,7 @@ Note the difference from the Drizzle sibling: here `tx` goes to the **factory**
 ## Imports
 
 ```ts
-import { BadRequestError, NotFoundError } from "@errors";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { RoleRepository } from "@repositories";
 import {
 	DatatableType,
@@ -186,7 +195,7 @@ Import only the errors the service actually throws.
 - [ ] Explicit return type on every method.
 - [ ] `detail`, `update`, `delete` all check existence and throw `NotFoundError`.
 - [ ] `create` and `update` check uniqueness; `update` excludes the record itself.
-- [ ] Uniqueness errors are `BadRequestError` with a `[{ field, message }]` array.
+- [ ] Uniqueness errors are `UnprocessableEntityError` (422) with a `[{ field, message }]` array.
 - [ ] Hashing and derived fields computed here, not in the repository.
 - [ ] Multi-write operations wrapped in `prisma.$transaction` with `tx` passed to the factory.
 - [ ] No HTTP types, no `set`, no `console.*`.

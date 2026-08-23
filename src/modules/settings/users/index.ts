@@ -84,7 +84,7 @@ export const UsersModule = new Elysia({
 				email: body.email,
 				password: body.password,
 				status: body.status,
-				role_ids: body.role_ids,
+				roleIds: body.roleIds,
 			});
 			return ResponseToolkit.created(user, trans("user.createSuccess"));
 		},
@@ -145,7 +145,7 @@ export const UsersModule = new Elysia({
 	.patch(
 		"/:id/sync-roles",
 		async ({ params, body }) => {
-			await UserService.syncRoles(params.id, body.role_ids);
+			await UserService.syncRoles(params.id, body.roleIds);
 			return ResponseToolkit.success(null, trans("user.syncRolesSuccess"));
 		},
 		{

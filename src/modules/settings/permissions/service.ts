@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "@errors";
+import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { PermissionRepository } from "@repositories";
 import { DatatableType, PaginationResponse, PermissionList } from "@types";
@@ -24,7 +24,7 @@ export const PermissionService = {
 	): Promise<{ id: string; name: string; group: string }> {
 		const existing = await PermissionRepository().findByName(name);
 		if (existing) {
-			throw new BadRequestError(t("permission.alreadyExists"), [
+			throw new UnprocessableEntityError(t("permission.alreadyExists"), [
 				{ field: "name", message: t("permission.nameExists") },
 			]);
 		}
@@ -43,7 +43,7 @@ export const PermissionService = {
 
 		const existing = await PermissionRepository().findByName(name);
 		if (existing && existing.id !== id) {
-			throw new BadRequestError(t("permission.alreadyExists"), [
+			throw new UnprocessableEntityError(t("permission.alreadyExists"), [
 				{ field: "name", message: t("permission.nameExists") },
 			]);
 		}

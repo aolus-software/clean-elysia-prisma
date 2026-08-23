@@ -38,7 +38,7 @@ export type UserCreate = {
 	password: string;
 	status?: UserStatus;
 	remark?: string;
-	role_ids?: string[];
+	roleIds?: string[];
 };
 
 export type UserDetail = {

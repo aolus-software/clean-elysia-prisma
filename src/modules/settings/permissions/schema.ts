@@ -61,12 +61,12 @@ export const PermissionDetailResponseSchema = commonResponse(
 
 export const PermissionCreateResponseSchema = commonResponse(
 	PermissionDataSchema,
-	{ include: [201, 400, 401, 403, 409, 422, 500] },
+	{ include: [201, 400, 401, 403, 422, 500] },
 );
 
 export const PermissionUpdateResponseSchema = commonResponse(
 	PermissionDataSchema,
-	{ include: [200, 400, 401, 403, 404, 409, 422, 500] },
+	{ include: [200, 400, 401, 403, 404, 422, 500] },
 );
 
 export const PermissionDeleteResponseSchema = commonResponse(t.Null(), {

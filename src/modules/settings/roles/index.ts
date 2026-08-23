@@ -131,7 +131,7 @@ export const RolesModule = new Elysia({
 	.patch(
 		"/:id/sync-permissions",
 		async ({ params, body }) => {
-			await RoleService.syncPermissions(params.id, body.permission_ids);
+			await RoleService.syncPermissions(params.id, body.permissionIds);
 			return ResponseToolkit.success(
 				null,
 				trans("role.syncPermissionsSuccess"),
