@@ -1,3 +1,4 @@
+import { StrongPassword } from "@default";
 import { commonResponse } from "@utils";
 import { t } from "elysia";
 
@@ -13,7 +14,13 @@ export const LoginSchema = t.Object({
 export const RegisterSchema = t.Object({
 	name: t.String({ minLength: 1 }),
 	email: t.String({ format: "email" }),
-	password: t.String({ minLength: 8 }),
+	password: t.String({
+		pattern: StrongPassword.source,
+		minLength: 8,
+		description:
+			"Strong password with uppercase, lowercase, number, and special character",
+		examples: ["MySecure123!"],
+	}),
 });
 
 // ============================================
@@ -64,7 +71,13 @@ export const ForgotPasswordSchema = t.Object({
 
 export const ResetPasswordSchema = t.Object({
 	token: t.String({ minLength: 1 }),
-	password: t.String({ minLength: 8 }),
+	password: t.String({
+		pattern: StrongPassword.source,
+		minLength: 8,
+		description:
+			"New strong password with uppercase, lowercase, number, and special character",
+		examples: ["NewSecure123!"],
+	}),
 });
 
 export const ResendVerificationSchema = t.Object({

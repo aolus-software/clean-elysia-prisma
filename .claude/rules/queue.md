@@ -16,7 +16,7 @@ src/bull/
 ## Rules
 
 1. **One queue per file, one worker per file.** Filename pattern: `<kebab-name>-queue.ts` / `<kebab-name>-worker.ts`. The queue name string (`"send-email"`) must match between the queue and its worker.
-2. **Always use `RedisClient.getQueueConnectionOptions()`** for the `connection` option. Do not construct a new `IORedis` instance — the shared connection pool is intentional.
+2. **Always use `RedisClient.getQueueConnectionOptions()`** for the `connection` option. Do not construct a new `IORedis` instance. BullMQ 6 builds its own `ioredis` client from these options (`ioredis` is a direct dependency because BullMQ only lists it as an optional peer).
 3. **Job payloads must be typed.** Use `new Queue<Payload>(...)` and `new Worker<Payload>(...)` with a type from `@types`. Never use `any`.
 4. **Producers enqueue, services orchestrate.** Route handlers and services call a thin enqueue helper (often via `@mailer` or another `libs/` service). Don't `new Queue()` inline in a handler.
 5. **Workers must re-throw on failure.** BullMQ uses thrown errors to trigger retries. Pattern:
@@ -34,7 +34,7 @@ src/bull/
 7. **No `console.log` in workers.** Use `log` from `@utils`.
 8. **Workers boot via `src/bull/index.ts`.** Importing `@bull` registers all workers — never import a worker file from a route handler.
 9. **Idempotent jobs.** Workers should tolerate the same job running twice (retry, restart). Use database guards (`upsert`, "already processed" checks) when at-least-once semantics aren't enough.
-10. **Configure retries explicitly when enqueuing** if the default isn't right:
+10. **Retries are configured on the queue.** The email queue sets `defaultJobOptions: { attempts: 3, backoff: { type: "exponential", delay: 2000 } }`; without `attempts` BullMQ tries a job once and the re-throw in rule 5 retries nothing. Override per job only when that default isn't right:
     ```ts
     await sendEmailQueue.add("send", payload, {
     	attempts: 5,

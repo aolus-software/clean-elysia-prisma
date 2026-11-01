@@ -1,11 +1,14 @@
 import { Cache, UserInformationCacheKey } from "@cache";
 import { prisma } from "@database";
-import { BadRequestError } from "@errors";
+import { BadRequestError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { AuthMailService } from "@mailer";
 import { UserRepository } from "@repositories";
 import { UserInformation } from "@types";
 import { Hash, log } from "@utils";
+
+const TIMING_EQUALISER_HASH =
+	"$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
 export const AuthService = {
 	async signIn(
@@ -13,22 +16,20 @@ export const AuthService = {
 		password: string,
 	): Promise<{ user: UserInformation }> {
 		const existing = await UserRepository().findByMail(email);
-		if (!existing) {
+
+		/* Verify the password before looking at account state, and answer an
+		   unknown address and a wrong password with the same message, so an
+		   unauthenticated caller cannot tell a registered address from an unknown
+		   one. The dummy comparison keeps the unknown-address path as slow as a
+		   real one. */
+		const isPasswordValid = await Hash.compareHash(
+			password,
+			existing?.password ?? TIMING_EQUALISER_HASH,
+		);
+
+		if (!existing || !isPasswordValid) {
 			throw new BadRequestError(t("auth.validationError"), [
 				{ field: "email", message: t("auth.invalidCredentials") },
-			]);
-		}
-
-		const isPasswordValid = await Hash.compareHash(password, existing.password);
-		if (!isPasswordValid) {
-			throw new BadRequestError(t("auth.validationError"), [
-				{ field: "password", message: t("auth.invalidCredentials") },
-			]);
-		}
-
-		if (existing.status !== "ACTIVE") {
-			throw new BadRequestError(t("auth.validationError"), [
-				{ field: "email", message: t("auth.accountInactive") },
 			]);
 		}
 
@@ -38,6 +39,12 @@ export const AuthService = {
 					field: "email",
 					message: t("auth.emailNotVerified"),
 				},
+			]);
+		}
+
+		if (existing.status !== "ACTIVE") {
+			throw new BadRequestError(t("auth.validationError"), [
+				{ field: "email", message: t("auth.accountInactive") },
 			]);
 		}
 
@@ -55,7 +62,7 @@ export const AuthService = {
 	async signUp(name: string, email: string, password: string) {
 		const existing = await UserRepository().findByMail(email);
 		if (existing) {
-			throw new BadRequestError(t("auth.validationError"), [
+			throw new UnprocessableEntityError(t("auth.validationError"), [
 				{ field: "email", message: t("auth.emailAlreadyRegistered") },
 			]);
 		}

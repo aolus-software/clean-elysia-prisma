@@ -156,8 +156,8 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 				data: roles.map((role) => ({
 					id: role.id,
 					name: role.name,
-					created_at: role.createdAt,
-					updated_at: role.updatedAt,
+					createdAt: role.createdAt,
+					updatedAt: role.updatedAt,
 				})),
 				meta: {
 					limit: finalLimit,
@@ -169,7 +169,7 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 
 		/**
 		 * Fetches role detail with all permissions grouped by group.
-		 * Each permission includes an `is_assigned` flag indicating
+		 * Each permission includes an `isAssigned` flag indicating
 		 * whether it is currently assigned to this role.
 		 */
 		async findOne(id: string): Promise<RoleDetail | null> {
@@ -200,7 +200,7 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 
 			const groupedMap = new Map<
 				string,
-				{ id: string; name: string; is_assigned: boolean }[]
+				{ id: string; name: string; isAssigned: boolean }[]
 			>();
 
 			for (const perm of allPermissions) {
@@ -208,15 +208,15 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 				groupedMap.get(perm.group)!.push({
 					id: perm.id,
 					name: perm.name,
-					is_assigned: assignedIds.has(perm.id),
+					isAssigned: assignedIds.has(perm.id),
 				});
 			}
 
 			return {
 				id: role.id,
 				name: role.name,
-				created_at: role.createdAt,
-				updated_at: role.updatedAt,
+				createdAt: role.createdAt,
+				updatedAt: role.updatedAt,
 				permissions: Array.from(groupedMap.entries()).map(([group, names]) => ({
 					group,
 					names,
@@ -233,21 +233,18 @@ export function RoleRepository(tx?: Prisma.TransactionClient) {
 			});
 		},
 
-		async create(name: string): Promise<{ id: string; name: string }> {
+		async create(name: string): Promise<RoleList> {
 			return db.role.create({
 				data: { name },
-				select: { id: true, name: true },
+				select: { id: true, name: true, createdAt: true, updatedAt: true },
 			});
 		},
 
-		async update(
-			id: string,
-			name: string,
-		): Promise<{ id: string; name: string }> {
+		async update(id: string, name: string): Promise<RoleList> {
 			return db.role.update({
 				where: { id },
 				data: { name },
-				select: { id: true, name: true },
+				select: { id: true, name: true, createdAt: true, updatedAt: true },
 			});
 		},
 

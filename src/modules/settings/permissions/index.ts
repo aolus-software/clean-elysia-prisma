@@ -64,7 +64,7 @@ export const PermissionsModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["permission detail"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: PermissionDetailResponseSchema,
 			detail: {
 				summary: "Get permission",
@@ -111,7 +111,7 @@ export const PermissionsModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["permission edit"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			body: UpdatePermissionSchema,
 			response: PermissionUpdateResponseSchema,
 			detail: {
@@ -130,7 +130,7 @@ export const PermissionsModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["permission delete"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: PermissionDeleteResponseSchema,
 			detail: {
 				summary: "Delete permission",

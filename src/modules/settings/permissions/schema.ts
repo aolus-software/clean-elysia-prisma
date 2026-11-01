@@ -29,8 +29,8 @@ export const PermissionDataSchema = t.Object({
 	id: t.String(),
 	name: t.String(),
 	group: t.String(),
-	created_at: t.Date(),
-	updated_at: t.Date(),
+	createdAt: t.Date(),
+	updatedAt: t.Date(),
 });
 
 // ============================================

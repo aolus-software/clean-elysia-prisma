@@ -18,10 +18,7 @@ export const PermissionService = {
 		return permission;
 	},
 
-	async create(
-		name: string,
-		group: string,
-	): Promise<{ id: string; name: string; group: string }> {
+	async create(name: string, group: string): Promise<PermissionList> {
 		const existing = await PermissionRepository().findByName(name);
 		if (existing) {
 			throw new UnprocessableEntityError(t("permission.alreadyExists"), [
@@ -35,7 +32,7 @@ export const PermissionService = {
 		id: string,
 		name: string,
 		group: string,
-	): Promise<{ id: string; name: string; group: string }> {
+	): Promise<PermissionList> {
 		const permission = await PermissionRepository().findOne(id);
 		if (!permission) {
 			throw new NotFoundError(t("permission.notFound"));

@@ -102,8 +102,8 @@ the author.
   numbered findings so each can be fixed, argued, or dismissed on its own.
 - **No unexplained numbers.** `paginationLength` from `@default` means nothing alone — say what it
   controls and why it is wrong here. Same for a TTL: name its unit, since `Cache.set(key, value,
-  3600)` in `auth.plugin.ts` and the constants in `src/libs/default/token-lifetime.ts` do not
-  necessarily agree on seconds vs milliseconds.
+  3600)` in `auth.plugin.ts` takes seconds while `TOKEN_TTL_MS` in `auth-mail.service.ts` is
+  milliseconds.
 
 ## Severity — pick the tag from consequence, not from effort
 

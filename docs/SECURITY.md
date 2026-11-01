@@ -37,6 +37,7 @@ POST /auth/register
 - Password is hashed using bcrypt before storage
 - Email verification link is sent to the user
 - User account is created but marked as unverified
+- An email already held by a live account is rejected with `422`
 
 #### 2. Email Verification
 
@@ -59,6 +60,11 @@ POST /auth/login
   "password": "SecurePass123!"
 }
 ```
+
+- The password is checked before account state. An unknown email and a wrong password get the same
+  `400` invalid-credentials message, and an unknown email is still compared against a dummy bcrypt
+  hash so timing does not reveal whether the address is registered
+- Only after the password matches does login report an unverified email or an inactive account
 
 **Response:**
 
@@ -155,6 +161,12 @@ POST /auth/reset-password
 - Ensures new password meets strong password requirements
 - Invalidates old tokens after successful reset
 
+### Change Password
+
+`PATCH /profile/password` (bearer token, no permission) takes `currentPassword` and `newPassword`.
+A wrong current password is a 422 on `currentPassword`; `newPassword` must pass the strong-password
+rule. On success the user's cached information (`user:<id>` in Redis) is cleared.
+
 ---
 
 ## Token Management
@@ -188,8 +200,10 @@ All authenticated endpoints validate:
 
 Tokens can be invalidated through:
 
-- Password change (invalidates all existing tokens)
-- Admin action (account suspension)
+- Nothing, today. Access tokens are stateless JWTs and this repo issues no refresh tokens, so a
+  token stays valid until it expires even after a password change. Changing a password clears the
+  cached user information only; suspending or deleting an account is what stops `AuthPlugin` from
+  resolving the user.
 
 ---
 
@@ -202,6 +216,10 @@ Rate limiting is implemented to prevent abuse and brute force attacks.
 | Endpoint Type | Limit        | Window     |
 | ------------- | ------------ | ---------- |
 | General API   | 100 requests | 60 seconds |
+
+Each client gets its own bucket, keyed by the TCP peer address from the listening server's
+`requestIP()`. Client headers such as `X-Forwarded-For` are never trusted for the key. Behind a
+reverse proxy every request arrives from the proxy's address, so rate-limit at the proxy as well.
 
 ### Rate Limit Exceeded Response
 
