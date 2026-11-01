@@ -176,8 +176,8 @@ export function PermissionRepository(tx?: Prisma.TransactionClient) {
 					id: permission.id,
 					name: permission.name,
 					group: permission.group,
-					created_at: permission.createdAt,
-					updated_at: permission.updatedAt,
+					createdAt: permission.createdAt,
+					updatedAt: permission.updatedAt,
 				})),
 				meta: {
 					limit: finalLimit,
@@ -205,8 +205,8 @@ export function PermissionRepository(tx?: Prisma.TransactionClient) {
 				id: data.id,
 				name: data.name,
 				group: data.group,
-				created_at: data.createdAt,
-				updated_at: data.updatedAt,
+				createdAt: data.createdAt,
+				updatedAt: data.updatedAt,
 			};
 		},
 
@@ -246,13 +246,16 @@ export function PermissionRepository(tx?: Prisma.TransactionClient) {
 			}));
 		},
 
-		async create(
-			name: string,
-			group: string,
-		): Promise<{ id: string; name: string; group: string }> {
+		async create(name: string, group: string): Promise<PermissionList> {
 			return db.permission.create({
 				data: { name, group },
-				select: { id: true, name: true, group: true },
+				select: {
+					id: true,
+					name: true,
+					group: true,
+					createdAt: true,
+					updatedAt: true,
+				},
 			});
 		},
 
@@ -260,11 +263,17 @@ export function PermissionRepository(tx?: Prisma.TransactionClient) {
 			id: string,
 			name: string,
 			group: string,
-		): Promise<{ id: string; name: string; group: string }> {
+		): Promise<PermissionList> {
 			return db.permission.update({
 				where: { id },
 				data: { name, group },
-				select: { id: true, name: true, group: true },
+				select: {
+					id: true,
+					name: true,
+					group: true,
+					createdAt: true,
+					updatedAt: true,
+				},
 			});
 		},
 

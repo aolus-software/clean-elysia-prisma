@@ -147,12 +147,13 @@ make db-generate      # prisma generate only
 make reset            # db-generate + db-migrate + db-seed
 ```
 
-Two targets are destructive and their names do not say so:
+Three targets are destructive and their names do not say so:
 
 - `make db-push` runs `prisma db push --force-reset` — it **drops and recreates** the schema with no
   migration file.
-- `make db-drop` runs `prisma migrate reset --force`.
-- `make fresh` is `db-drop` → `db-push` → `db-seed`, so it resets the database **twice**.
+- `make db-drop` runs `prisma migrate reset --force` — it drops the schema and re-applies every
+  migration. Prisma 7 does not seed on reset.
+- `make fresh` is `db-drop` → `db-seed`.
 
 Never run any of the three against a shared database.
 

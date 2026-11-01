@@ -374,6 +374,49 @@ Content-Type: application/json
 }
 ```
 
+#### Change Password
+
+Requires a bearer token; no permission. `newPassword` follows the strong-password rule (min 8
+chars, upper, lower, number, special character). On success the cached user information is cleared.
+This repo issues no refresh tokens, so an access token already issued stays valid until it expires.
+
+**Request:**
+
+```http
+PATCH /profile/password
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "currentPassword": "SecurePass123!",
+  "newPassword": "NewSecure123!"
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+	"status": 200,
+	"success": true,
+	"message": "Password changed successfully",
+	"data": null
+}
+```
+
+**Wrong current password (422):**
+
+```json
+{
+	"status": 422,
+	"success": false,
+	"message": "Validation error",
+	"errors": [
+		{ "field": "currentPassword", "message": "Current password is incorrect" }
+	]
+}
+```
+
 ---
 
 ## Validation Rules

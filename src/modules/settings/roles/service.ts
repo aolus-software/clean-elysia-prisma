@@ -21,7 +21,7 @@ export const RoleService = {
 		return role;
 	},
 
-	async create(name: string): Promise<{ id: string; name: string }> {
+	async create(name: string): Promise<RoleList> {
 		const existing = await RoleRepository().findByName(name);
 		if (existing) {
 			throw new UnprocessableEntityError(t("role.alreadyExists"), [
@@ -31,10 +31,7 @@ export const RoleService = {
 		return RoleRepository().create(name);
 	},
 
-	async update(
-		id: string,
-		name: string,
-	): Promise<{ id: string; name: string }> {
+	async update(id: string, name: string): Promise<RoleList> {
 		const role = await RoleRepository().findOne(id);
 		if (!role) {
 			throw new NotFoundError(t("role.notFound"));

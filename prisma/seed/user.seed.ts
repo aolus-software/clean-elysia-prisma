@@ -23,7 +23,7 @@ export async function seedUser() {
 			data: {
 				email,
 				name,
-				password: await Hash.generateHash("password123"),
+				password: await Hash.generateHash("S3crEtP4ssw0rd!"),
 				emailVerifiedAt: new Date(),
 			},
 		});

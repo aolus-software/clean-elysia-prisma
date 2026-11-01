@@ -32,7 +32,7 @@ route handler (index.ts) -> service.ts -> repository -> Prisma -> PostgreSQL
    | `@plugins` | `AuthPlugin`, `DiPlugin`, `DocsPlugin`, `ErrorHandlerPlugin`, `LocalePlugin`, `LoggerPlugin`, `PerformancePlugin`, `RequestPlugin`, `SecurityPlugin`, `BodyLimitPlugin`, `container` |
    | `@guards` | `PermissionGuard`, `RoleGuard` — both `static canActivate(user, [...])`, called from `beforeHandle` |
    | `@errors` | `BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `UnprocessableEntityError`, `RateLimitError` |
-   | `@default` | `StrongPassword`, `paginationLength`, `defaultSort`, `maxUploadFile`, `allowedFileMimeTypes`, token lifetimes |
+   | `@default` | `StrongPassword`, `paginationLength`, `defaultSort`, `maxUploadFile`, `allowedFileMimeTypes` |
    | `@cache` | `Cache` (`get`/`set`/`del`), `UserInformationCacheKey` |
    | `@types` | `DatatableType`, `PaginationResponse`, `EmailOptions`, and the per-entity DTOs |
 

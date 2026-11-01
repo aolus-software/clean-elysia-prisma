@@ -49,6 +49,8 @@ export type TranslationKey =
 	| "permission.nameExists"
 	| "permission.notFound"
 	| "permission.updateSuccess"
+	| "profile.currentPasswordIncorrect"
+	| "profile.passwordChanged"
 	| "profile.retrieved"
 	| "profile.updated"
 	| "role.alreadyExists"

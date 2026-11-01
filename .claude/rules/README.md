@@ -44,7 +44,7 @@ Ordered outside-in, the way a request travels.
 | [routes.md](./routes.md) | Path composition, verb conventions, and the **live route map** with the guard on every route |
 | [errors-and-responses.md](./errors-and-responses.md) | The success envelope, the six error classes and their statuses, `ErrorHandlerPlugin` |
 | [openapi.md](./openapi.md) | OpenAPI / Scalar documentation, `detail`, tags, security |
-| [i18n.md](./i18n.md) | `t()` from `@i18n`, the `en`/`id` catalogues (92 keys, moved together), the generated key type, no hardcoded user-facing strings |
+| [i18n.md](./i18n.md) | `t()` from `@i18n`, the `en`/`id` catalogues (94 keys, moved together), the generated key type, no hardcoded user-facing strings |
 | [mail.md](./mail.md) | Queued mail via `AuthMailService`, templates and their locale variants, `{{var}}` substitution |
 | [rate-limiting.md](./rate-limiting.md) | The global limiter inside `SecurityPlugin`, and why its numbers are hardcoded |
 | [queue.md](./queue.md) | BullMQ queues, workers, retries |

@@ -17,5 +17,6 @@ export async function seedPermissions() {
 
 	await prisma.permission.createMany({
 		data: permissions,
+		skipDuplicates: true,
 	});
 }

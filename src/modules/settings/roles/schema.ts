@@ -30,15 +30,15 @@ export const SyncRolePermissionsSchema = t.Object({
 export const RoleListDataSchema = t.Object({
 	id: t.String(),
 	name: t.String(),
-	created_at: t.Date(),
-	updated_at: t.Date(),
+	createdAt: t.Date(),
+	updatedAt: t.Date(),
 });
 
 export const RoleDetailDataSchema = t.Object({
 	id: t.String(),
 	name: t.String(),
-	created_at: t.Date(),
-	updated_at: t.Date(),
+	createdAt: t.Date(),
+	updatedAt: t.Date(),
 	permissions: t.Array(
 		t.Object({
 			group: t.String(),
@@ -46,7 +46,7 @@ export const RoleDetailDataSchema = t.Object({
 				t.Object({
 					id: t.String(),
 					name: t.String(),
-					is_assigned: t.Boolean(),
+					isAssigned: t.Boolean(),
 				}),
 			),
 		}),

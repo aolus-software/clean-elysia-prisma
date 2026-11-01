@@ -198,8 +198,7 @@ app.post("/login", ({ body }) => AuthService.signIn(body), {
   - Resend verification email
 
 - **Profile Module** (`/profile/*`)
-  - Get user profile
-  - Update profile information
+  - Change password (`PATCH /profile/password`)
 
 - **Settings Module** (`/settings/*`)
   - User management (CRUD)

@@ -51,6 +51,9 @@ POST   /auth/reset-password                          —   public
                                         .use(AuthPlugin) from here down
 GET    /auth/me                                      —   own identity
 
+# Profile (src/modules/profile, prefix /profile) — tags ["Profile"], baseApp + AuthPlugin
+PATCH  /profile/password                             —   own identity
+
 # Settings / Users (prefix /settings/users) — tags ["Settings - Users"], AuthPlugin
 GET    /settings/users/                              PermissionGuard ["user list"]
 POST   /settings/users/                              PermissionGuard ["user create"]
@@ -102,7 +105,7 @@ change — that is [documentation.md](./documentation.md).
 
 Tags mirror the module path with ` - ` as the separator: `Settings - Users`, `Settings - Roles`,
 `Settings - Permissions`, `Settings - Select Options`; top-level modules get a single word (`Auth`,
-`General`). Note this differs from the sibling repo, which uses `Settings/Users` — stay consistent
+`Profile`, `General`). Note this differs from the sibling repo, which uses `Settings/Users` — stay consistent
 *within* this repo. Tags are set once per module in `new Elysia({ detail: { tags } })` and inherited by
 every child route; do not repeat them per route.
 

@@ -29,7 +29,7 @@ help:
 	@echo "    db-push             - Push schema to database (dev only, FORCE-RESETS data)"
 	@echo "    db-pull             - Pull schema from database"
 	@echo "    db-studio           - Open Prisma Studio"
-	@echo "    db-drop             - Reset the database (dangerous! destroys all data)"
+	@echo "    db-drop             - Drop the schema and re-apply all migrations (destroys all data)"
 	@echo "    db-seed             - Seed database with initial data"
 	@echo ""
 	@echo "  Database (ClickHouse):"
@@ -48,7 +48,7 @@ help:
 	@echo "    docker-deploy       - git pull + build + up + migrate (server deploy)"
 	@echo ""
 	@echo "  Workflows:"
-	@echo "    fresh               - Drop, push schema, and seed (dev only)"
+	@echo "    fresh               - Drop the schema, re-apply migrations, and seed (dev only)"
 	@echo "    reset               - Generate, migrate, and seed"
 
 install:
@@ -98,7 +98,6 @@ db-studio:
 
 db-drop:
 	bunx --bun prisma migrate reset --force
-	@echo "All tables dropped! Use 'make db-push' to recreate the schema."
 
 db-seed:
 	bun run db:seed
@@ -146,8 +145,8 @@ docker-deploy:
 	@echo "Deployed!"
 
 # Combined workflows
-fresh: db-drop db-push db-seed
-	@echo "Database refreshed and seeded!"
+fresh: db-drop db-seed
+	@echo "Database dropped, migrated and seeded!"
 
 reset: db-generate db-migrate db-seed
 	@echo "Database migrated and seeded!"

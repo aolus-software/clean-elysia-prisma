@@ -72,6 +72,8 @@ Seed the database with initial data:
 bun run db:seed
 ```
 
+The seed creates one verified account per role (`superuser@example.com`, `admin@example.com`, `user@example.com`) with the password `S3crEtP4ssw0rd!`. Change it before using the seed anywhere shared.
+
 For development, you can also use:
 
 ```sh
@@ -261,7 +263,7 @@ apart from the seeder.
 - `make db-push` - Push the schema to the database (development only; **force-resets data**)
 - `make db-pull` - Pull the schema from the database
 - `make db-studio` - Open Prisma Studio
-- `make db-drop` - Reset the database (**dangerous — destroys all data**)
+- `make db-drop` - Drop the schema and re-apply all migrations (**dangerous — destroys all data**)
 - `bun run db:seed` - Seed the database with initial data
 
 ### Database (ClickHouse)
@@ -287,7 +289,7 @@ You can also use `make` commands:
 
 - `make help` - Show all available commands
 - `make dev` - Start development server
-- `make fresh` - Drop, push schema, and seed (development)
+- `make fresh` - Drop the schema, re-apply migrations, and seed (development)
 - `make reset` - Generate migrations, migrate, and seed
 
 ## Documentation

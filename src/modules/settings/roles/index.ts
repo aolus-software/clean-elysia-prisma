@@ -63,7 +63,7 @@ export const RolesModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["role detail"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: RoleDetailResponseSchema,
 			detail: {
 				summary: "Get role",
@@ -101,7 +101,7 @@ export const RolesModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["role edit"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			body: UpdateRoleSchema,
 			response: RoleUpdateResponseSchema,
 			detail: {
@@ -120,7 +120,7 @@ export const RolesModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["role delete"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: RoleDeleteResponseSchema,
 			detail: {
 				summary: "Delete role",
@@ -141,7 +141,7 @@ export const RolesModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				RoleGuard.canActivate(user, ["superuser"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			body: SyncRolePermissionsSchema,
 			response: RoleSyncPermissionsResponseSchema,
 			detail: {

@@ -79,7 +79,7 @@ Note the layout: **`libs/` lives inside `src/`**. There is no top-level `libs/` 
 | `src/libs/mailer/**` | transport, `mail.service.ts`, `auth-mail.service.ts`, and the four Handlebars/HTML templates (en + id) |
 | `src/libs/utils/**` | `ResponseToolkit` + `commonResponse` (`utils/elysia/response.ts`), `DatatableToolkit`, `log`, `Hash`, `encrypt`, and the `toolkit/` helpers |
 | `src/libs/config/**` | `env.config.ts` (`cleanEnv` validation) plus the app/cors/jwt/mail/redis/database/clickhouse config objects |
-| `src/libs/default/**`, `src/libs/types/**` | the constants (`pagination-length`, `sort`, `strong-password`, `token-lifetime`, upload limits) and the domain types |
+| `src/libs/default/**`, `src/libs/types/**` | the constants (`pagination-length`, `sort`, `strong-password`, upload limits) and the domain types |
 | `src/bull/**` | `send-mail-queue.ts` / `send-mail-worker.ts`, retry and re-throw behaviour, and what happens to workers under cluster mode |
 | `prisma/**` | `schema.prisma`, the two applied migrations under `prisma/migrations/`, and the seeds (`permission.seed.ts`, `role.seed.ts`, `user.seed.ts`) — **the seeded permission catalogue is ground truth for any guard** |
 | repo root | `Makefile`, `.env.example`, `package.json` scripts, `tsconfig.json` path aliases, `eslint.config.mjs`, `.husky/pre-commit`, `.github/workflows/ci.yml`, `Dockerfile`, `docker-compose.yml` |
@@ -103,7 +103,8 @@ reached** rather than letting silence imply they were clean.
    `PasswordReset` row is invalidated rather than left reusable; whether issuing a second token
    revokes the first (`src/modules/auth/service.ts` uses `deleteMany` in several places — check each
    one actually runs before the new token is written, and inside a transaction where it matters);
-   token lifetimes sourced from `src/libs/default/token-lifetime.ts` rather than inline numbers;
+   token lifetimes computed at issue time (`TOKEN_TTL_MS` in `auth-mail.service.ts`), never frozen
+   in a module-scope constant;
    what `GET /auth/me` returns.
 2. **Access control — guards & routes** — every route in `src/modules/**/index.ts` against its
    gating. `AuthPlugin` is opt-in per route group (`modules.md` rule 3): a route below it proves

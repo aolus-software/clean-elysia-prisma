@@ -50,7 +50,7 @@ make db-migrate        # prisma migrate deploy
 make db-push           # prisma db push --force-reset
 make db-studio         # prisma studio
 make db-drop           # prisma migrate reset --force
-make fresh             # db-drop + db-push + db-seed
+make fresh             # db-drop + db-seed
 make reset             # db-generate + db-migrate + db-seed
 ```
 
@@ -64,7 +64,7 @@ ClickHouse: `bun run db:clickhouse:migrate`, `bun run db:clickhouse:status`.
 - `src/server.ts` — The actual Elysia bootstrap: calls `bootstrap()`, then composes `DocsPlugin` + `ErrorHandlerPlugin` + `bootstraps` (all modules) and listens on `AppConfig.APP_PORT` — as `{ port, reusePort: true }` when `APP_REUSE_PORT` is set, otherwise the bare port. Each cluster worker runs this independently.
 - `src/base.ts` — `baseApp`, the shared Elysia instance carrying seven global plugins: `RequestPlugin` → `LocalePlugin` → `LoggerPlugin` → `PerformancePlugin` → `DiPlugin` → `BodyLimitPlugin` → `SecurityPlugin`. Order matters — request-id must precede logging, and locale must precede anything that emits a translated string.
 - `src/bootstrap.ts` — Registers services in the DI container at startup (currently registers `authService`). Add new DI registrations here.
-- `src/modules/index.ts` — `bootstraps` composes every top-level module (`HomeModule`, `HealthModule`, `AuthModule`, `SettingsModule`). New modules wire in here.
+- `src/modules/index.ts` — `bootstraps` composes every top-level module (`HomeModule`, `HealthModule`, `AuthModule`, `ProfileModule`, `SettingsModule`). New modules wire in here.
 
 ### Scaling: Cluster Mode and Reuse-Port
 

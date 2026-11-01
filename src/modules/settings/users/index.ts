@@ -67,7 +67,7 @@ export const UsersModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user detail"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: UserDetailResponseSchema,
 			detail: {
 				summary: "Get user",
@@ -115,7 +115,7 @@ export const UsersModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user edit"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			body: UpdateUserSchema,
 			response: UserUpdateResponseSchema,
 			detail: {
@@ -134,7 +134,7 @@ export const UsersModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user delete"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: UserDeleteResponseSchema,
 			detail: {
 				summary: "Delete user",
@@ -152,7 +152,7 @@ export const UsersModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				RoleGuard.canActivate(user, ["superuser"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			body: SyncUserRolesSchema,
 			response: UserSyncRolesResponseSchema,
 			detail: {
@@ -172,7 +172,7 @@ export const UsersModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user create"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: UserActionResponseSchema,
 			detail: {
 				summary: "Send email verification",
@@ -193,7 +193,7 @@ export const UsersModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				PermissionGuard.canActivate(user, ["user create"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			response: UserActionResponseSchema,
 			detail: {
 				summary: "Send password reset email",
@@ -211,7 +211,7 @@ export const UsersModule = new Elysia({
 			beforeHandle: ({ user }) => {
 				RoleGuard.canActivate(user, ["superuser"]);
 			},
-			params: t.Object({ id: t.String() }),
+			params: t.Object({ id: t.String({ format: "uuid" }) }),
 			body: ResetPasswordSchema,
 			response: UserActionResponseSchema,
 			detail: {
