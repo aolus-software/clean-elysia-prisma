@@ -50,7 +50,7 @@ cp .env.example .env
 
 Configure the following environment variables:
 
-- Database connections (PostgreSQL, Redis, ClickHouse)
+- Database connections (PostgreSQL, Redis, ClickHouse) and the PostgreSQL pool / query log (`DB_POOL_*`, `DB_LOG_QUERIES`)
 - Mail settings
 - JWT secrets
 - Application settings
@@ -139,7 +139,7 @@ APP_CLUSTER_MODE=true APP_CLUSTER_WORKERS=4 bun run start
 
 > **Caveats**
 >
-> - Every worker re-runs `bootstrap()` and instantiates its own Prisma, Redis, and BullMQ connections. Side-effectful imports (BullMQ workers, scheduled jobs) fire once per worker — if you need single-instance semantics, gate them on `cluster.worker?.id === 1` or run queue workers as a separate process.
+> - Every worker re-runs `bootstrap()` and instantiates its own Prisma, Redis, and BullMQ connections. Each worker opens its own PostgreSQL pool of `DB_POOL_MAX` connections, so keep `workers x DB_POOL_MAX` under the server's `max_connections`. Side-effectful imports (BullMQ workers, scheduled jobs) fire once per worker — if you need single-instance semantics, gate them on `cluster.worker?.id === 1` or run queue workers as a separate process.
 > - In-memory state (caches, rate-limit counters not backed by Redis) is **not** shared across workers — keep cross-worker state in Redis.
 > - The primary process does not bind the HTTP port; only workers call `.listen()`.
 

@@ -35,6 +35,10 @@ model User {
   passwordResets    PasswordReset[]
   userRoles         UserRole[]
 
+  // Live emails are also unique at the database level through the partial
+  // unique index "uq_user_email_live" (email WHERE "deletedAt" IS NULL). Prisma
+  // 7 cannot express a partial index, so it lives only in the migration
+  // 20261112023407_add_rbac_lookup_indexes_and_live_email_unique.
   @@index([email], name: "idx_user_email")
   @@index([deletedAt], name: "idx_user_deleted_at")
 }
@@ -103,6 +107,7 @@ model UserRole {
   role Role @relation(fields: [roleId], references: [id])
 
   @@id([userId, roleId])
+  @@index([roleId], name: "idx_user_role_role_id")
 }
 
 model RolePermission {
@@ -115,4 +120,5 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id])
 
   @@id([roleId, permissionId])
+  @@index([permissionId], name: "idx_role_permission_permission_id")
 }

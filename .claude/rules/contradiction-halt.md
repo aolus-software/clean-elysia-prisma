@@ -70,7 +70,9 @@ side effect of unrelated work — raise it first.
   which `AuthPlugin` resolves the caller's roles and permissions through — an unfiltered read there
   would leave a deleted user fully authenticated. `Role`, `Permission`, and the join tables are
   **hard-deleted**; do not assume otherwise. `User.email` deliberately has no `@unique` so a deleted
-  user's address is reusable — uniqueness among live users is a service check only.
+  user's address is reusable — uniqueness among live users is checked in the service (a 422) and
+  backed by the partial unique index `uq_user_email_live` (`WHERE "deletedAt" IS NULL`), which
+  exists only in a migration because Prisma cannot model it.
 - **There are no tests and no test runner.** `package.json` defines
   `"test": "echo \"Error: no test specified\" && exit 1"`, and the repo contains zero `*.test.ts` /
   `*.spec.ts` files. None of the invariants in these rules has a regression test. Never report test

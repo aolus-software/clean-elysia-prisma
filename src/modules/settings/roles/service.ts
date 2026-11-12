@@ -1,3 +1,4 @@
+import { forgetSelectOptions } from "@cache";
 import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { RoleRepository } from "@repositories";
@@ -28,7 +29,9 @@ export const RoleService = {
 				{ field: "name", message: t("role.nameExists") },
 			]);
 		}
-		return RoleRepository().create(name);
+		const created = await RoleRepository().create(name);
+		await forgetSelectOptions();
+		return created;
 	},
 
 	async update(id: string, name: string): Promise<RoleList> {
@@ -44,7 +47,9 @@ export const RoleService = {
 			]);
 		}
 
-		return RoleRepository().update(id, name);
+		const updated = await RoleRepository().update(id, name);
+		await forgetSelectOptions();
+		return updated;
 	},
 
 	async delete(id: string): Promise<void> {
@@ -53,6 +58,7 @@ export const RoleService = {
 			throw new NotFoundError(t("role.notFound"));
 		}
 		await RoleRepository().delete(id);
+		await forgetSelectOptions();
 	},
 
 	async syncPermissions(
