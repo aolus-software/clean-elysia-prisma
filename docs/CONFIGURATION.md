@@ -51,14 +51,29 @@ CLIENT_URL="http://localhost:3000"
 
 PostgreSQL database configuration.
 
-| Variable       | Type     | Description                  |
-| -------------- | -------- | ---------------------------- |
-| `DATABASE_URL` | `string` | PostgreSQL connection string |
+| Variable                        | Type      | Default | Description                                                                              |
+| ------------------------------- | --------- | ------- | ---------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                  | `string`  | —       | PostgreSQL connection string                                                             |
+| `DB_POOL_MAX`                   | `number`  | `10`    | Pool size per process; integer >= 1. Cluster mode and reuse-port multiply it per process |
+| `DB_POOL_IDLE_TIMEOUT_MS`       | `number`  | `30000` | An idle connection is closed after this long                                             |
+| `DB_POOL_CONNECTION_TIMEOUT_MS` | `number`  | `5000`  | A query waiting for a free connection fails after this long                              |
+| `DB_LOG_QUERIES`                | `boolean` | `false` | Prisma logs each statement at `debug` (text and duration, never parameter values)        |
+
+`DB_LOG_QUERIES` only shows with `LOG_LEVEL="debug"`. An idle pool connection that errors is logged
+at `error` instead of crashing the process.
+
+`POSTGRES_SLOW_QUERY_MS` (default `100`) is read only by `docker-compose.yml`: the postgres container
+logs every statement slower than this many milliseconds (`log_min_duration_statement`); `-1`
+disables it. It is not validated by `env.config.ts`.
 
 **Example**:
 
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/elysia_db"
+DB_POOL_MAX=10
+DB_POOL_IDLE_TIMEOUT_MS=30000
+DB_POOL_CONNECTION_TIMEOUT_MS=5000
+DB_LOG_QUERIES=false
 ```
 
 **Validation Rules**:
@@ -259,7 +274,8 @@ here so an `.env` can be carried across without silently losing a setting.
 | JWT              | `JWT_SECRET` only        | `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`    |
 
 **Elysia-only** (no NestJS equivalent): `APP_CLUSTER_MODE`, `APP_CLUSTER_WORKERS`, `APP_REUSE_PORT`,
-`LOG_LEVEL`, `CLICKHOUSE_HOST`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`.
+`LOG_LEVEL`, `DB_POOL_MAX`, `DB_POOL_IDLE_TIMEOUT_MS`, `DB_POOL_CONNECTION_TIMEOUT_MS`,
+`DB_LOG_QUERIES`, `CLICKHOUSE_HOST`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE`.
 
 **NestJS-only**: `THROTTLER_TTL`, `THROTTLER_LIMIT`, `APP_VERSION`. One is worth knowing about when
 porting _from_ Nest:

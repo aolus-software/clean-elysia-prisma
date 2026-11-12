@@ -26,7 +26,7 @@ Services hold the _what_ and _why_ of a feature. Repositories hold the _how_ of 
    - Business validation (uniqueness, state machine) → service, throwing custom errors from `@errors`
 5. **Throw, don't return error objects.** Every failure throws `BadRequestError`, `UnauthorizedError`, `NotFoundError`, `ForbiddenError`. `ErrorHandlerPlugin` turns them into proper HTTP responses.
 6. **Wrap multi-write operations in `prisma.$transaction`** and pass `tx` into repositories. See [repositories.md](./repositories.md).
-7. **Cache reads, invalidate on writes.** When a service caches in Redis (e.g. `Cache.set(UserInformationCacheKey(id), …)`), the corresponding write methods in the same service must invalidate the same key. Keep cache keys in `@cache`.
+7. **Cache reads, invalidate on writes.** When a service caches in Redis (e.g. `Cache.set(UserInformationCacheKey(id), …)`), the corresponding write methods in the same service must invalidate the same key. Keep cache keys in `@cache`. When the cache is read in one module and written in another, put the invalidation helper in `@cache` too: `SelectOptionService` caches both select-option lists for 3600 s (`SELECT_OPTIONS_TTL_SECONDS`), and every `RoleService` / `PermissionService` create, update and delete calls `forgetSelectOptions()`. A direct database write (the seeder, `make fresh`) does not, so the lists can lag by up to an hour until Redis is flushed.
 8. **Log with structured fields and a message:**
    ```ts
    log.error({ error, userId }, "Failed to queue verification email");

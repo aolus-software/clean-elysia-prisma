@@ -60,6 +60,11 @@ model UserRole {
 modelling choice — the pair *is* the identity. Follow it for new join tables rather than adding an
 `id` column.
 
+The composite key only serves lookups that lead with its first column, so each join table also
+indexes its second one: `idx_user_role_role_id` ("who holds this role") and
+`idx_role_permission_permission_id` ("which roles grant this permission", and the foreign-key check
+when a role or permission is deleted). A new join table gets the same.
+
 ## Relations and cascade
 
 Every relation currently reads `@relation(fields: [userId], references: [id])` with **no
@@ -84,10 +89,14 @@ Two things follow, and both are load-bearing:
   would leave a deleted user fully authenticated.
 - **`email` deliberately has no `@unique`.** A soft-deleted user's address has to be reusable, and a
   database-level unique constraint would reject the reuse with a raw `P2002` *after* the service's
-  own check has already passed. Uniqueness among live users is enforced in the service; the schema
-  carries plain `@@index([email])` and `@@index([deletedAt])`. Both sibling repos resolve it the same
-  way. The trade-off is real: nothing at the database level stops two live users sharing an address
-  if the service check is skipped or races.
+  own check has already passed. Uniqueness among live users is enforced in the service first (a
+  field-mapped 422), and backed at the database level by the **partial unique index**
+  `uq_user_email_live` on `email WHERE "deletedAt" IS NULL`, so a skipped or raced check fails
+  instead of creating a second live user (it surfaces as an unmapped `P2002`, a 500). Prisma 7
+  cannot express a partial index: it lives only in migration
+  `20261112023407_add_rbac_lookup_indexes_and_live_email_unique`, with a comment in `schema.prisma`
+  naming it; `prisma migrate diff` ignores it, so later migrations do not drop it. The schema also
+  carries plain `@@index([email])` and `@@index([deletedAt])`.
 
 Adding soft delete to another model means adding the column **and** auditing every read of it in the
 same change. A `deletedAt` with unfiltered reads is worse than no soft delete at all, because the row

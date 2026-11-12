@@ -2,7 +2,6 @@ import { baseApp } from "@base";
 import { PermissionGuard } from "@guards";
 import { t as trans } from "@i18n";
 import { AuthPlugin } from "@plugins";
-import { PermissionRepository, RoleRepository } from "@repositories";
 import { ResponseToolkit } from "@utils";
 import { Elysia } from "elysia";
 
@@ -10,6 +9,7 @@ import {
 	PermissionSelectOptionResponseSchema,
 	RoleSelectOptionResponseSchema,
 } from "./schema";
+import { SelectOptionService } from "./service";
 
 export const SelectOptionModule = new Elysia({
 	name: "settings-select-option-module",
@@ -21,7 +21,7 @@ export const SelectOptionModule = new Elysia({
 	.get(
 		"/permissions",
 		async () => {
-			const permissions = await PermissionRepository().selectOptions();
+			const permissions = await SelectOptionService.permissions();
 			return ResponseToolkit.success(
 				permissions,
 				trans("selectOption.permissionsSuccess"),
@@ -42,16 +42,7 @@ export const SelectOptionModule = new Elysia({
 	.get(
 		"/roles",
 		async () => {
-			const result = await RoleRepository().findAll({
-				page: 1,
-				perPage: 1000,
-				sortDirection: "asc",
-				sort: "name",
-			});
-			const roles = result.data.map((role) => ({
-				id: role.id,
-				name: role.name,
-			}));
+			const roles = await SelectOptionService.roles();
 			return ResponseToolkit.success(roles, trans("selectOption.rolesSuccess"));
 		},
 		{

@@ -1,3 +1,4 @@
+import { forgetSelectOptions } from "@cache";
 import { NotFoundError, UnprocessableEntityError } from "@errors";
 import { t } from "@i18n";
 import { PermissionRepository } from "@repositories";
@@ -25,7 +26,9 @@ export const PermissionService = {
 				{ field: "name", message: t("permission.nameExists") },
 			]);
 		}
-		return PermissionRepository().create(name, group);
+		const created = await PermissionRepository().create(name, group);
+		await forgetSelectOptions();
+		return created;
 	},
 
 	async update(
@@ -45,7 +48,9 @@ export const PermissionService = {
 			]);
 		}
 
-		return PermissionRepository().update(id, name, group);
+		const updated = await PermissionRepository().update(id, name, group);
+		await forgetSelectOptions();
+		return updated;
 	},
 
 	async delete(id: string): Promise<void> {
@@ -54,5 +59,6 @@ export const PermissionService = {
 			throw new NotFoundError(t("permission.notFound"));
 		}
 		await PermissionRepository().delete(id);
+		await forgetSelectOptions();
 	},
 };

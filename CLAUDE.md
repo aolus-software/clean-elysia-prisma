@@ -78,7 +78,7 @@ Two mutually exclusive strategies, three env vars (see [`docs/CONFIGURATION.md`]
 
 Caveats when enabling cluster mode:
 
-- Every worker re-runs `bootstrap()` and instantiates its own Prisma/Redis/BullMQ singletons. Side-effectful module loads (`@bull` workers, scheduled jobs) fire **once per worker** — gate them on `cluster.worker?.id === 1` or split queue workers into a separate process if you need single-instance semantics.
+- Every worker re-runs `bootstrap()` and instantiates its own Prisma/Redis/BullMQ singletons — including a PostgreSQL pool of `DB_POOL_MAX` connections, so keep `workers x DB_POOL_MAX` under the server's `max_connections`. Side-effectful module loads (`@bull` workers, scheduled jobs) fire **once per worker** — gate them on `cluster.worker?.id === 1` or split queue workers into a separate process if you need single-instance semantics.
 - In-memory state (caches, rate-limit counters that aren't backed by Redis) does **not** share across workers. Cross-worker state must go through Redis or another shared store.
 - The primary process does not bind the HTTP port; only workers call `.listen()`. Health checks should target a worker.
 
